@@ -125,7 +125,8 @@ def start_transmitter(service: str) -> Tuple[bool, Optional[str]]:
                 bufsize=1,
             )
         except OSError as exc:
-            return False, str(exc)
+            logging.error("Failed to start transmitter: %s", exc)
+            return False, "Failed to launch the time-signal binary. Check server logs for details."
 
         _proc = proc
         threading.Thread(
