@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>time-signal</title>
+  <style>
+    /* ------------------------------------------------------------------ */
+    /* Reset & base                                                         */
+    /* ------------------------------------------------------------------ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0d0d0d;
+      --surface:   #161616;
+      --surface2:  #1f1f1f;
+      --border:    #2a2a2a;
+      --text:      #e2e2e2;
+      --muted:     #888;
+      --green:     #22c55e;
+      --green-dim: #14532d;
+      --red:       #ef4444;
+      --red-dim:   #7f1d1d;
+      --blue:      #3b82f6;
+      --blue-hover:#2563eb;
+      --radius:    10px;
+      --font:      'Segoe UI', system-ui, -apple-system, sans-serif;
+      --mono:      'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    }
+
+    html { height: 100%; }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1rem 4rem;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Layout                                                               */
+    /* ------------------------------------------------------------------ */
+    .page { width: 100%; max-width: 540px; display: flex; flex-direction: column; gap: 1.25rem; }
+
+    /* ------------------------------------------------------------------ */
+    /* Header                                                               */
+    /* ------------------------------------------------------------------ */
+    header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.5rem 0 0.25rem;
+    }
+    header svg { flex-shrink: 0; }
+    header h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.5px; }
+    header p  { font-size: 0.8rem; color: var(--muted); margin-top: 1px; }
+
+    /* ------------------------------------------------------------------ */
+    /* Cards                                                                */
+    /* ------------------------------------------------------------------ */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem 1.5rem;
+    }
+    .card-title {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 1rem;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Status indicator                                                     */
+    /* ------------------------------------------------------------------ */
+    .status-row {
+      display: flex;
+      align-items: center;
+      gap: 0.9rem;
+    }
+    .dot-wrap { position: relative; width: 18px; height: 18px; flex-shrink: 0; }
+    .dot {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background: var(--muted);
+      transition: background 0.3s;
+    }
+    .dot-ring {
+      position: absolute;
+      inset: -4px;
+      border-radius: 50%;
+      border: 2px solid var(--muted);
+      opacity: 0;
+      transition: border-color 0.3s;
+    }
+    .running .dot        { background: var(--green); }
+    .running .dot-ring   { border-color: var(--green); opacity: 1;
+                           animation: pulse 1.6s ease-out infinite; }
+    .stopped .dot        { background: var(--red); }
+
+    @keyframes pulse {
+      0%   { transform: scale(0.85); opacity: 0.9; }
+      70%  { transform: scale(1.6);  opacity: 0; }
+      100% { transform: scale(1.6);  opacity: 0; }
+    }
+
+    .status-label  { font-size: 1.1rem; font-weight: 600; }
+    .status-sub    { font-size: 0.8rem; color: var(--muted); margin-top: 2px; }
+    .badge {
+      margin-left: auto;
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      padding: 3px 10px;
+      border-radius: 99px;
+      background: var(--surface2);
+      color: var(--muted);
+      white-space: nowrap;
+    }
+    .running .badge  { background: var(--green-dim); color: var(--green); }
+    .stopped .badge  { background: var(--red-dim);   color: var(--red); }
+
+    /* ------------------------------------------------------------------ */
+    /* Service selector                                                     */
+    /* ------------------------------------------------------------------ */
+    .service-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 0.6rem;
+    }
+    .service-option { display: none; }
+    .service-label {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      padding: 0.65rem 0.85rem;
+      border-radius: 8px;
+      border: 1.5px solid var(--border);
+      background: var(--surface2);
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+      user-select: none;
+    }
+    .service-label:hover { border-color: var(--blue); }
+    .service-label .svc-name { font-size: 0.9rem; font-weight: 600; }
+    .service-label .svc-meta { font-size: 0.72rem; color: var(--muted); }
+    .service-option:checked + .service-label {
+      border-color: var(--blue);
+      background: rgba(59,130,246,0.12);
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Buttons                                                              */
+    /* ------------------------------------------------------------------ */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      border: none;
+      border-radius: 8px;
+      font-family: var(--font);
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s, opacity 0.15s;
+      padding: 0.7rem 1.4rem;
+    }
+    .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+    .btn-primary  { background: var(--blue);  color: #fff; width: 100%; margin-top: 1rem; }
+    .btn-primary:hover:not(:disabled) { background: var(--blue-hover); }
+    .btn-danger   { background: var(--red);   color: #fff; width: 100%; margin-top: 1rem; }
+    .btn-danger:hover:not(:disabled)  { background: #dc2626; }
+
+    /* ------------------------------------------------------------------ */
+    /* Toggle switch                                                        */
+    /* ------------------------------------------------------------------ */
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+    .toggle-info .toggle-title { font-size: 0.9rem; font-weight: 500; }
+    .toggle-info .toggle-desc  { font-size: 0.78rem; color: var(--muted); margin-top: 2px; }
+
+    .switch { position: relative; display: inline-block; width: 44px; height: 24px; flex-shrink: 0; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute;
+      inset: 0;
+      background: var(--surface2);
+      border: 1.5px solid var(--border);
+      border-radius: 99px;
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .slider::before {
+      content: '';
+      position: absolute;
+      width: 16px; height: 16px;
+      left: 3px; top: 50%;
+      transform: translateY(-50%);
+      background: var(--muted);
+      border-radius: 50%;
+      transition: transform 0.2s, background 0.2s;
+    }
+    .switch input:checked + .slider { background: var(--blue); border-color: var(--blue); }
+    .switch input:checked + .slider::before {
+      transform: translate(20px, -50%);
+      background: #fff;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Log viewer                                                           */
+    /* ------------------------------------------------------------------ */
+    .log-box {
+      background: #080808;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      height: 180px;
+      overflow-y: auto;
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      line-height: 1.6;
+      color: #9ca3af;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+    .log-box:empty::before { content: 'No output yet.'; color: var(--muted); }
+
+    /* ------------------------------------------------------------------ */
+    /* Error banner                                                         */
+    /* ------------------------------------------------------------------ */
+    .error-banner {
+      display: none;
+      background: var(--red-dim);
+      border: 1px solid var(--red);
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      font-size: 0.82rem;
+      color: #fca5a5;
+    }
+    .error-banner.visible { display: block; }
+
+    /* ------------------------------------------------------------------ */
+    /* Spinner                                                              */
+    /* ------------------------------------------------------------------ */
+    .spin {
+      display: inline-block;
+      width: 16px; height: 16px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      flex-shrink: 0;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spin.hidden { display: none; }
+
+    /* ------------------------------------------------------------------ */
+    /* Footer                                                               */
+    /* ------------------------------------------------------------------ */
+    footer {
+      margin-top: 0.5rem;
+      font-size: 0.72rem;
+      color: var(--muted);
+      text-align: center;
+      line-height: 1.7;
+    }
+    footer a { color: var(--muted); }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Header -->
+  <header>
+    <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+      <circle cx="16" cy="16" r="6" fill="#3b82f6"/>
+      <path d="M16 16 Q10 10 4 4"  stroke="#3b82f6" stroke-width="1.5" stroke-linecap="round" opacity=".5"/>
+      <path d="M16 16 Q22 10 28 4" stroke="#3b82f6" stroke-width="1.5" stroke-linecap="round" opacity=".5"/>
+      <path d="M8 22 Q12 18 16 16" stroke="#3b82f6" stroke-width="1.5" stroke-linecap="round" opacity=".35"/>
+      <path d="M24 22 Q20 18 16 16"stroke="#3b82f6" stroke-width="1.5" stroke-linecap="round" opacity=".35"/>
+    </svg>
+    <div>
+      <h1>time-signal</h1>
+      <p>Radio Time Signal Transmitter</p>
+    </div>
+  </header>
+
+  <!-- Error banner -->
+  <div class="error-banner" id="errorBanner"></div>
+
+  <!-- Status card -->
+  <div class="card">
+    <div class="card-title">Status</div>
+    <div class="status-row stopped" id="statusRow">
+      <div class="dot-wrap">
+        <div class="dot"></div>
+        <div class="dot-ring"></div>
+      </div>
+      <div>
+        <div class="status-label" id="statusLabel">Stopped</div>
+        <div class="status-sub"  id="statusSub">No transmission</div>
+      </div>
+      <div class="badge" id="statusBadge">IDLE</div>
+    </div>
+  </div>
+
+  <!-- Service card -->
+  <div class="card">
+    <div class="card-title">Time Service</div>
+    <div class="service-grid" id="serviceGrid">
+      {% for svc in services %}
+      <input class="service-option" type="radio" name="service"
+             id="svc-{{ svc }}" value="{{ svc }}"
+             {% if loop.first %}checked{% endif %}>
+      <label class="service-label" for="svc-{{ svc }}">
+        <span class="svc-name">{{ svc }}</span>
+        <span class="svc-meta">
+          {{ service_info[svc].freq }} · {{ service_info[svc].region }}
+        </span>
+      </label>
+      {% endfor %}
+    </div>
+    <button class="btn btn-primary" id="mainBtn" onclick="handleMainBtn()">
+      <span class="spin hidden" id="btnSpinner"></span>
+      <span id="btnLabel">Start Transmission</span>
+    </button>
+  </div>
+
+  <!-- Settings card -->
+  <div class="card">
+    <div class="card-title">Settings</div>
+    <div class="toggle-row">
+      <div class="toggle-info">
+        <div class="toggle-title">Autostart with system</div>
+        <div class="toggle-desc">Start transmitting automatically when the Pi boots</div>
+      </div>
+      <label class="switch">
+        <input type="checkbox" id="autostartToggle" onchange="handleAutostart(this)">
+        <span class="slider"></span>
+      </label>
+    </div>
+  </div>
+
+  <!-- Log card -->
+  <div class="card">
+    <div class="card-title">Output Log</div>
+    <div class="log-box" id="logBox"></div>
+  </div>
+
+  <footer>
+    Polling every 2 s &nbsp;·&nbsp;
+    <a href="https://github.com/harlock974/time-signal" target="_blank" rel="noopener">time-signal on GitHub</a>
+  </footer>
+
+</div><!-- .page -->
+
+<script>
+(function () {
+  'use strict';
+
+  /* ---- State ----------------------------------------------------------- */
+  let isRunning   = false;
+  let isBusy      = false;   // waiting for API response
+  let autostartEl = document.getElementById('autostartToggle');
+
+  /* ---- UI helpers ------------------------------------------------------- */
+  function showError(msg) {
+    const el = document.getElementById('errorBanner');
+    el.textContent = msg;
+    el.classList.add('visible');
+    setTimeout(() => el.classList.remove('visible'), 6000);
+  }
+
+  function setBusy(busy) {
+    isBusy = busy;
+    document.getElementById('mainBtn').disabled = busy;
+    document.getElementById('btnSpinner').classList.toggle('hidden', !busy);
+  }
+
+  function updateUI(data) {
+    isRunning = data.running;
+
+    // Status row
+    const row    = document.getElementById('statusRow');
+    const label  = document.getElementById('statusLabel');
+    const sub    = document.getElementById('statusSub');
+    const badge  = document.getElementById('statusBadge');
+    row.className = 'status-row ' + (isRunning ? 'running' : 'stopped');
+    label.textContent = isRunning ? 'Transmitting' : 'Stopped';
+    sub.textContent   = isRunning
+      ? data.service + ' — ' + (serviceFreq(data.service) || '')
+      : 'No transmission';
+    badge.textContent = isRunning ? 'ON AIR' : 'IDLE';
+
+    // Service radios — select the active service
+    const radio = document.querySelector(`input[name="service"][value="${data.service}"]`);
+    if (radio) radio.checked = true;
+
+    // Disable service radios while transmitting
+    document.querySelectorAll('input[name="service"]').forEach(r => {
+      r.disabled = isRunning;
+    });
+
+    // Main button
+    const btnLabel = document.getElementById('btnLabel');
+    const mainBtn  = document.getElementById('mainBtn');
+    btnLabel.textContent = isRunning ? 'Stop Transmission' : 'Start Transmission';
+    mainBtn.className    = 'btn ' + (isRunning ? 'btn-danger' : 'btn-primary');
+
+    // Autostart toggle
+    autostartEl.checked = data.autostart;
+
+    // Logs
+    const logBox = document.getElementById('logBox');
+    if (data.logs && data.logs.length > 0) {
+      const atBottom = logBox.scrollHeight - logBox.clientHeight <= logBox.scrollTop + 5;
+      logBox.textContent = data.logs.join('\n');
+      if (atBottom) logBox.scrollTop = logBox.scrollHeight;
+    }
+  }
+
+  const SERVICE_FREQ = {{ service_info | tojson }};
+  function serviceFreq(svc) {
+    return SERVICE_FREQ[svc] ? SERVICE_FREQ[svc].freq : '';
+  }
+
+  /* ---- API calls -------------------------------------------------------- */
+  async function fetchStatus() {
+    try {
+      const res = await fetch('/api/status');
+      if (!res.ok) return;
+      updateUI(await res.json());
+    } catch (_) { /* network hiccup – ignore */ }
+  }
+
+  window.handleMainBtn = async function () {
+    if (isBusy) return;
+    setBusy(true);
+    try {
+      if (isRunning) {
+        const res = await fetch('/api/stop', { method: 'POST' });
+        if (!res.ok) showError('Failed to stop: ' + res.status);
+      } else {
+        const service = document.querySelector('input[name="service"]:checked')?.value;
+        const res = await fetch('/api/start', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ service }),
+        });
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          showError(body.error || 'Failed to start: ' + res.status);
+        }
+      }
+    } catch (err) {
+      showError('Network error: ' + err.message);
+    } finally {
+      setBusy(false);
+      await fetchStatus();
+    }
+  };
+
+  window.handleAutostart = async function (el) {
+    const enable = el.checked;
+    try {
+      const res = await fetch('/api/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ autostart: enable }),
+      });
+      if (!res.ok) {
+        el.checked = !enable; // revert
+        showError('Failed to update autostart setting.');
+      }
+    } catch (err) {
+      el.checked = !enable;
+      showError('Network error: ' + err.message);
+    }
+  };
+
+  /* ---- Bootstrap -------------------------------------------------------- */
+  fetchStatus();
+  setInterval(fetchStatus, 2000);
+})();
+</script>
+</body>
+</html>
