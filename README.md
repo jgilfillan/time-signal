@@ -58,9 +58,7 @@ If you choose **yes**, the installer will prompt for:
 * Gateway/router IP
 * DNS servers
 
-It then updates `/etc/dhcpcd.conf`, creates a timestamped backup of the previous file, and tries to restart `dhcpcd`.
-
-If `/etc/dhcpcd.conf` is not present (for example on systems that use NetworkManager), the installer will skip automatic static IP configuration and let you continue with installation.
+The installer auto-detects whether your Pi uses **NetworkManager** (Raspberry Pi OS Bookworm and newer) or **dhcpcd** (older releases) and applies the settings with the right tool.  For dhcpcd it also creates a timestamped backup of `/etc/dhcpcd.conf` before making any changes.
 
 ### Requirements
 

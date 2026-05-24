@@ -143,46 +143,60 @@ configure_static_ip() {
   echo "  Gateway   : $gateway"
   echo "  DNS       : $dns_servers"
 
-  if ! yes_no_prompt "Apply these settings to /etc/dhcpcd.conf?"; then
+  if ! yes_no_prompt "Apply these settings?"; then
     info "Static IP setup cancelled"
     return
   fi
 
-  local dhcpcd_conf="/etc/dhcpcd.conf"
-  local backup_file="/etc/dhcpcd.conf.time-signal.bak.$(date +%Y%m%d%H%M%S)"
+  # Detect which network manager is in use
+  if systemctl is-active --quiet NetworkManager 2>/dev/null; then
+    # ── NetworkManager path ───────────────────────────────────────────────
+    local conn
+    conn=$(nmcli -t -f NAME,DEVICE connection show --active 2>/dev/null \
+           | awk -F: -v iface="$iface_choice" '$2==iface{print $1; exit}')
 
-  if [ ! -f "$dhcpcd_conf" ]; then
-    warn "$dhcpcd_conf was not found."
-    warn "On your OS, static IP may be managed by NetworkManager instead."
-    warn "Skipping static IP automatic setup."
-    return
-  fi
-
-  cp "$dhcpcd_conf" "$backup_file"
-
-  sed -i '/^# >>> time-signal static ip >>>$/,/^# <<< time-signal static ip <<</d' "$dhcpcd_conf"
-
-  {
-    echo
-    echo "# >>> time-signal static ip >>>"
-    echo "interface $iface_choice"
-    echo "static ip_address=$ip_addr/$cidr"
-    echo "static routers=$gateway"
-    echo "static domain_name_servers=$dns_servers"
-    echo "# <<< time-signal static ip <<<"
-  } >> "$dhcpcd_conf"
-
-  info "Updated $dhcpcd_conf"
-  info "Backup saved to $backup_file"
-
-  if systemctl list-unit-files | grep -q '^dhcpcd\.service'; then
-    if systemctl restart dhcpcd; then
-      info "dhcpcd restarted; static IP should be active now."
-    else
-      warn "Could not restart dhcpcd automatically. Reboot may be required."
+    if [ -z "$conn" ]; then
+      warn "No active NetworkManager connection found for $iface_choice."
+      warn "Apply manually with:"
+      warn "  nmcli connection modify \"<name>\" ipv4.method manual \\"
+      warn "    ipv4.addresses \"$ip_addr/$cidr\" ipv4.gateway \"$gateway\" \\"
+      warn "    ipv4.dns \"${dns_servers// /,}\""
+      warn "  nmcli connection up \"<name>\""
+      return
     fi
+
+    nmcli connection modify "$conn" \
+      ipv4.method manual \
+      ipv4.addresses "$ip_addr/$cidr" \
+      ipv4.gateway  "$gateway" \
+      ipv4.dns      "${dns_servers// /,}"
+    nmcli connection up "$conn"
+    info "Static IP applied via NetworkManager (connection: $conn)."
+
+  elif [ -f "/etc/dhcpcd.conf" ]; then
+    # ── dhcpcd path ───────────────────────────────────────────────────────
+    local dhcpcd_conf="/etc/dhcpcd.conf"
+    local backup_file="$dhcpcd_conf.time-signal.bak.$(date +%Y%m%d%H%M%S)"
+
+    cp "$dhcpcd_conf" "$backup_file"
+    sed -i '/^# >>> time-signal static ip >>>$/,/^# <<< time-signal static ip <<</d' "$dhcpcd_conf"
+    {
+      echo
+      echo "# >>> time-signal static ip >>>"
+      echo "interface $iface_choice"
+      echo "static ip_address=$ip_addr/$cidr"
+      echo "static routers=$gateway"
+      echo "static domain_name_servers=$dns_servers"
+      echo "# <<< time-signal static ip <<<"
+    } >> "$dhcpcd_conf"
+
+    info "Updated $dhcpcd_conf (backup: $backup_file)"
+    systemctl restart dhcpcd
+    info "dhcpcd restarted; static IP is active."
+
   else
-    warn "dhcpcd service not found. Reboot or reconfigure your network manager manually."
+    warn "Could not detect a supported network manager (NetworkManager or dhcpcd)."
+    warn "Configure a static IP manually before rebooting."
   fi
 }
 
