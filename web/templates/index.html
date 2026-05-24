@@ -324,7 +324,7 @@
       {% for svc in services %}
       <input class="service-option" type="radio" name="service"
              id="svc-{{ svc }}" value="{{ svc }}"
-             {% if loop.first %}checked{% endif %}>
+              {% if config.service == svc %}checked{% endif %}>
       <label class="service-label" for="svc-{{ svc }}">
         <span class="svc-name">{{ svc }}</span>
         <span class="svc-meta">
@@ -405,9 +405,12 @@
       : 'No transmission';
     badge.textContent = isRunning ? 'ON AIR' : 'IDLE';
 
-    // Service radios — select the active service
-    const radio = document.querySelector(`input[name="service"][value="${data.service}"]`);
-    if (radio) radio.checked = true;
+    // Service radios — keep the active service synced while transmitting,
+    // but do not overwrite a stopped user's in-progress selection.
+    if (isRunning) {
+      const radio = document.querySelector(`input[name="service"][value="${data.service}"]`);
+      if (radio) radio.checked = true;
+    }
 
     // Disable service radios while transmitting
     document.querySelectorAll('input[name="service"]').forEach(r => {

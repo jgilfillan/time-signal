@@ -160,8 +160,13 @@ logging.basicConfig(
 
 @app.route('/')
 def index():
-    return render_template('index.html', services=VALID_SERVICES,
-                           service_info=SERVICE_INFO)
+    cfg = load_config()
+    return render_template(
+        'index.html',
+        services=VALID_SERVICES,
+        service_info=SERVICE_INFO,
+        config=cfg,
+    )
 
 
 @app.route('/api/status')
