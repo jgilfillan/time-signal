@@ -37,7 +37,8 @@ The installer will:
 1. Compile the `time-signal` binary (if not already built)
 2. Create a Python virtual environment in `web/.venv`
 3. Install Flask into that environment
-4. Install and start a `systemd` service (`time-signal-web`) that runs the web server on port **8080**
+4. Optionally guide you through configuring a static IP address
+5. Install and start a `systemd` service (`time-signal-web`) that runs the web server on port **8080**
 
 Once complete, open a browser and navigate to:
 
@@ -46,6 +47,20 @@ http://<raspberry-pi-hostname-or-ip>:8080
 ```
 
 You can find the Pi's IP address with `hostname -I`.
+
+### Optional static IP setup
+
+During installation, you will be asked whether you want to configure a static IP.
+
+If you choose **yes**, the installer will prompt for:
+* Interface (for example `wlan0` or `eth0`)
+* Static IP address and CIDR prefix
+* Gateway/router IP
+* DNS servers
+
+It then updates `/etc/dhcpcd.conf`, creates a timestamped backup of the previous file, and tries to restart `dhcpcd`.
+
+If `/etc/dhcpcd.conf` is not present (for example on systems that use NetworkManager), the installer will skip automatic static IP configuration and let you continue with installation.
 
 ### Requirements
 
