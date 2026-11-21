@@ -1,7 +1,12 @@
-# Enclosure: Pi 60 kHz Time-Signal Transmitter
+# 3D-printed enclosure
 
-One box holds the Raspberry Pi Zero, the pHAT stacked on it, and the 3-rod ferrite antenna
-lying along the back wall.
+One box holds the Raspberry Pi Zero, the [pHAT](../pcb/README.md) stacked on
+it, and the 3-rod [ferrite antenna](../antenna/README.md) lying along the back
+wall.
+
+| Exploded | Assembled |
+|---|---|
+| ![Exploded view](render_exploded.png) | ![Assembled view](render_assembly.png) |
 
 - Outside size: 194.4 x 66.4 x 36 mm (base 34 mm + lid 2 mm)
 - Parts: `base.stl`, `lid.stl` (the lid is already flipped for printing)

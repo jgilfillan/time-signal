@@ -12,7 +12,7 @@
 
 set -euo pipefail
 
-# Non-interactive mode (used by appliance/setup-appliance.sh):
+# Non-interactive mode (used by pi-setup/setup-appliance.sh):
 #   sudo ./install.sh --non-interactive
 # skips the optional static-IP questions.
 NON_INTERACTIVE=0

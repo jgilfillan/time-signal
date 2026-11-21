@@ -3,7 +3,7 @@
 # you write to every give-away card.
 #
 # Run on a Linux PC (not the Pi), as root:
-#   sudo ./appliance/build-image.sh master.img time-signal-appliance.img
+#   sudo ./pi-setup/build-image.sh master.img time-signal-appliance.img
 #
 # Make master.img by reading the master Pi's SD card, e.g.
 #   sudo dd if=/dev/sdX of=master.img bs=4M status=progress conv=fsync
@@ -12,7 +12,7 @@
 #   1. shrinks the root filesystem to its contents plus some free space
 #      (--root-free-mb, default 600)
 #   2. adds a small ext4 partition labelled "tsdata" (--data-mb, default 64)
-#      that appliance/setup-appliance.sh mounts at /data for Wi-Fi settings
+#      that pi-setup/setup-appliance.sh mounts at /data for Wi-Fi settings
 #      and the app config
 #   3. removes things that must not be shared between devices or that hold
 #      your own details: saved Wi-Fi networks, machine-id, shell history,

@@ -60,12 +60,13 @@ def rot(px, py, r):
             round(-x * math.sin(t) + y * math.cos(t), 4))
 
 def place(lib, name, ref, value, x, y, r=0, fp="", props=None, nets=None,
-          in_bom=True, on_board=True, dnp=False, stub=2.54):
+          in_bom=True, on_board=True, dnp=False, stub=2.54, lbl=None):
     key = need(lib, name)
     blk, pins = SYMS[key]
     parts.append(dict(key=key, ref=ref, value=value, x=x, y=y, r=r, fp=fp,
                       props=props or {}, pins=list(pins.keys()),
-                      in_bom=in_bom, on_board=on_board, dnp=dnp))
+                      in_bom=in_bom, on_board=on_board, dnp=dnp,
+                      lbl=lbl or (4, -4, 4, 4.5)))
     for num, (px, py, pa) in pins.items():
         ox, oy = rot(px, py, r)
         ex, ey = x + ox, y + oy
@@ -88,10 +89,11 @@ GND_PINS = ["6", "9", "14", "20", "25", "30", "34", "39"]
 j1nets = {"2": "+5V", "4": "+5V", "7": "GPIO4"}
 for p in GND_PINS: j1nets[p] = "GND"
 place("Connector_Generic", "Conn_02x20_Odd_Even", "J1", "RPi_GPIO_40pin", 50.8, 88.9,
-      fp="Connector_PinSocket_2.54mm:PinSocket_2x20_P2.54mm_Vertical", props={"LCSC": "C2977589"}, nets=j1nets)
+      fp="Connector_PinSocket_2.54mm:PinSocket_2x20_P2.54mm_Vertical", props={"LCSC": "C2977589"}, nets=j1nets,
+      lbl=(-3.5, -28, -6, 28))
 
 # Gate drive
-place("Device", "R", "R2", "470R", 88.9, 66.04, r=90, fp="Resistor_SMD:R_0603_1608Metric",
+place("Device", "R", "R2", "470R", 88.9, 66.04, r=90, lbl=(-1, -4.5, -1, 5.5), fp="Resistor_SMD:R_0603_1608Metric",
       props={"LCSC": "C23179"}, nets={"1": "GPIO4", "2": "GATE"})
 place("Device", "R", "R3", "100k", 101.6, 78.74, r=0, fp="Resistor_SMD:R_0603_1608Metric",
       props={"LCSC": "C25803"}, nets={"1": "GATE", "2": "GND"})
@@ -99,7 +101,7 @@ place("Transistor_FET", "BSS138", "Q1", "AO3400A", 116.84, 66.04, r=0,
       fp="Package_TO_SOT_SMD:SOT-23", props={"LCSC": "C20917"},
       nets={"1": "GATE", "2": "GND", "3": "TANK_A"})
 # Pull-up / current limit
-place("Device", "R", "R1", "220R", 119.38, 45.72, r=0, fp="Resistor_SMD:R_1206_3216Metric",
+place("Device", "R", "R1", "220R", 132.08, 45.72, r=0, fp="Resistor_SMD:R_1206_3216Metric",
       props={"LCSC": "C17957"}, nets={"1": "+5V", "2": "TANK_B"})
 # Series tuning capacitors (all in parallel with each other)
 caps = [("C1", "10nF C0G", "C64713", False, "Capacitor_SMD:C_1206_3216Metric"),
@@ -112,21 +114,21 @@ for i, (ref, val, lc, dnp, fp) in enumerate(caps):
           props={"LCSC": lc} if lc else {}, nets={"1": "TANK_B", "2": "TANK_A"},
           in_bom=not dnp, dnp=dnp)
 # Antenna terminal and the off-board ferrite coil
-place("Connector", "Screw_Terminal_01x02", "J2", "ANTENNA", 213.36, 66.04, r=0,
+place("Connector", "Screw_Terminal_01x02", "J2", "ANTENNA", 223.52, 66.04, r=0,
       fp="TerminalBlock_Phoenix:TerminalBlock_Phoenix_MKDS-1,5-2-5.08_1x02_P5.08mm_Horizontal",
       props={"LCSC": "C8465"}, nets={"1": "TANK_B", "2": "TANK_A"})
-place("Device", "L", "L1", "Ferrite antenna ~610uH (off-board)", 228.6, 66.04, r=0,
+place("Device", "L", "L1", "Ferrite antenna ~610uH (off-board)", 241.3, 66.04, r=0,
       nets={"1": "TANK_B", "2": "TANK_A"}, in_bom=False, on_board=False)
 # Supply decoupling
 place("Device", "C", "C6", "10uF", 101.6, 45.72, r=0, fp="Capacitor_SMD:C_0805_2012Metric",
       props={"LCSC": "C15850"}, nets={"1": "+5V", "2": "GND"})
 # Power flags
-place("power", "PWR_FLAG", "#FLG01", "PWR_FLAG", 88.9, 30.48, nets={"1": "+5V"})
-place("power", "PWR_FLAG", "#FLG02", "PWR_FLAG", 101.6, 30.48, nets={"1": "GND"})
+place("power", "PWR_FLAG", "#FLG01", "PWR_FLAG", 63.5, 30.48, nets={"1": "+5V"})
+place("power", "PWR_FLAG", "#FLG02", "PWR_FLAG", 88.9, 30.48, nets={"1": "GND"})
 
 texts.append(("Raspberry Pi 60 kHz time-signal transmitter pHAT (WWVB / MSF / JJY60)", 25.4, 20.32))
 texts.append(("Parallel tank (as tested on breadboard): 5V -> R1 220R -> TANK_B; ferrite coil and C1..C5 in parallel between TANK_B and TANK_A;\\nQ1 drain on TANK_A, source to GND. GPIO4 drives the gate via R2 470R, R3 100k holds Q1 off at boot.", 25.4, 130.0))
-texts.append(("Tuning: C1+C2 = 11.5 nF for ~600 uH. Add C3/C4 (1206 C0G) or a leaded trimmer in C5 to trim to 60.000 kHz.", 25.4, 140.0))
+texts.append(("Tuning: C1+C2 = 11.5 nF for ~610 uH. Add C3/C4 (1206 C0G) or a leaded trimmer in C5 to trim to 60.000 kHz.", 25.4, 140.0))
 
 # ---------------- write file ----------------
 o = []
@@ -165,7 +167,7 @@ for p in parts:
     (instances (project "pi_time_tx" (path "/%s" (reference "%s") (unit 1))))
   )''' % (p["key"], p["x"], p["y"], p["r"],
          "yes" if p["in_bom"] else "no", "yes" if p["on_board"] else "no", "yes" if p["dnp"] else "no",
-         u(), p["ref"], p["x"] + 4, p["y"] - 4, hide_ref, p["value"], p["x"] + 4, p["y"] + 4.5,
+         u(), p["ref"], p["x"] + p["lbl"][0], p["y"] + p["lbl"][1], hide_ref, p["value"], p["x"] + p["lbl"][2], p["y"] + p["lbl"][3],
          p["fp"], p["x"], p["y"], p["x"], p["y"], "\n".join(prop_lines), pin_s, root, p["ref"]))
 o.append('  (sheet_instances (path "/" (page "1")))\n)')
 txt = "\n".join(o).replace("(uuid %s)\n  (paper" % "", "(paper")

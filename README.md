@@ -1,119 +1,85 @@
 # time-signal
-A multiband time signal radio transmitter for Raspberry Pi.
 
-**time-signal** allows to convert a Raspberry Pi to a radio time server using using either JJY, MSF, WWVB or DCF77 protocol, allowing to automatically adjust time on radio-controlled watch or clock. 
+A radio time-signal transmitter for the Raspberry Pi. It sends **JJY**, **MSF**,
+**WWVB** or **DCF77** so radio-controlled watches and clocks set themselves,
+wherever you live.
 
-## Platforms
+This fork adds a hardware design (a Pi Zero pHAT, ferrite antenna and
+3D-printed case), a web control panel, and scripts to turn a Pi into a
+plug-and-play gift for fellow watch enthusiasts.
 
-**time-signal** has been succesfully tested on :
-* Raspberry Pi Zero W
-* Raspberry Pi 3 Model B Rev 1.2
-* Raspberry Pi 4 Model B Rev 1.1
+| pHAT | Enclosure |
+|---|---|
+| ![pHAT](hardware/pcb/render_top.png) | ![Enclosure](hardware/enclosure/render_exploded.png) |
 
-## In this fork
+## Where to start
 
-* **[hardware/](hardware/)** — a Pi Zero pHAT (KiCad, ready to order assembled from JLCPCB), a 3-rod ferrite antenna and a 3D-printed enclosure.
-* **[appliance/](appliance/)** — scripts to turn a Pi into a plug-and-play gift: Wi-Fi set-up from a phone, auto-start once the clock is synced, read-only SD card. Recipients get [docs/QUICKSTART.md](docs/QUICKSTART.md).
-* The web interface now waits for internet time before transmitting, and always sends each station's own time (Japan time for JJY) whatever time zone the Pi is set to.
+| I want to… | Go to |
+|---|---|
+| Understand the circuit | [hardware/schematic](hardware/schematic/README.md) |
+| Try it on a breadboard | [hardware/breadboard](hardware/breadboard/README.md) |
+| Wind and tune the antenna | [hardware/antenna](hardware/antenna/README.md) |
+| Order the assembled PCB | [hardware/pcb](hardware/pcb/README.md) |
+| Print the case | [hardware/enclosure](hardware/enclosure/README.md) |
+| Run it on my own Pi | [Software](#software) below |
+| Make units to give away | [pi-setup](pi-setup/README.md) |
+| I've been given one | [docs/QUICKSTART.md](docs/QUICKSTART.md) |
 
-## Build
+## How it works
 
-Inside the directory where the source files are, simply type `make`
+![Circuit diagram](hardware/schematic/circuit_diagram.png)
 
-## Web Interface
+The Pi generates the carrier (40, 60 or 77.5 kHz) on GPIO4 (pin 7) with its
+hardware clock, and switches it on and off each second to encode the time
+the way the real station does. A MOSFET drives a ferrite antenna tuned to
+the carrier frequency. Range is a few metres, which is plenty for watches on
+a shelf nearby. See [hardware](hardware/README.md) for the details.
 
-**time-signal** includes a browser-based control panel that you can access from any device on your home network — phone, tablet, laptop, etc.  It lets you:
+**Supported Pis:** upstream tested the transmitter on the Pi Zero W, Pi 3
+Model B and Pi 4 Model B. The Pi Zero 2 W uses the same chip family as the
+Pi 3 and is expected to work. The pHAT and enclosure fit the Zero W and
+Zero 2 W.
 
-* Start and stop the radio transmission
-* Select the time service (DCF77, WWVB, JJY40, JJY60, MSF)
-* Toggle **autostart** — automatically begin transmitting whenever the Raspberry Pi boots
-* Watch live output from the transmitter
+## Software
 
-### Quick-start
+### Install
+
+On Raspberry Pi OS:
 
 ```bash
-# Clone / enter the repository
+git clone https://github.com/jgilfillan/time-signal.git
 cd time-signal
-
-# Build the binary and install the web interface (one command)
 sudo ./install.sh
 ```
 
-The installer will:
-1. Compile the `time-signal` binary (if not already built)
-2. Create a Python virtual environment in `web/.venv`
-3. Install Flask into that environment
-4. Optionally guide you through configuring a static IP address (skipped with `--non-interactive`)
-5. Install and start a `systemd` service (`time-signal-web`) that runs the web server on port **8080**
+The installer:
 
-Once complete, open a browser and navigate to:
+1. compiles the `time-signal` binary
+2. creates a Python virtual environment in `web/.venv` and installs Flask
+3. optionally helps you set a static IP address (skipped with `--non-interactive`)
+4. installs and starts the `time-signal-web` service on port **8080**
 
-```
-http://<raspberry-pi-hostname-or-ip>:8080
-```
+Then open `http://<pi-hostname-or-ip>:8080`.
 
-You can find the Pi's IP address with `hostname -I`.
+### Web interface
 
-### Optional static IP setup
+From any phone or computer on your network you can:
 
-During installation, you will be asked whether you want to configure a static IP.
+- start and stop transmission, and choose the station
+- see the time being sent, whether the clock is synced, and a live log
+- turn on **autostart**, so it transmits whenever the Pi boots
 
-If you choose **yes**, the installer will prompt for:
-* Interface (for example `wlan0` or `eth0`)
-* Static IP address and CIDR prefix
-* Gateway/router IP
-* DNS servers
+**It won't transmit until the Pi's clock has synced with internet time.** A
+Pi has no battery-backed clock, so before that it can be hours or days out and
+would set your watches wrong. Autostart waits (the page shows *Waiting for
+time sync*), and the Start button explains why it can't start yet.
 
-The installer auto-detects whether your Pi uses **NetworkManager** (Raspberry Pi OS Bookworm and newer) or **dhcpcd** (older releases) and applies the settings with the right tool.  For dhcpcd it also creates a timestamped backup of `/etc/dhcpcd.conf` before making any changes.
+**Each station sends its own country's time** (Japan for JJY, Germany for
+DCF77, UK for MSF, UTC with US daylight-saving bits for WWVB), whatever time
+zone the Pi is set to.
 
-### Requirements
-
-* Python 3.9 or newer (pre-installed on Raspberry Pi OS Bullseye / Bookworm)
-* `gcc` and `make` (pre-installed on Raspberry Pi OS)
-* Root privileges for the installer (`sudo ./install.sh`)
-
-### Managing the service
-
-```bash
-# Check the web server is running
-sudo systemctl status time-signal-web
-
-# Follow live logs
-sudo journalctl -u time-signal-web -f
-
-# Stop the web server
-sudo systemctl stop time-signal-web
-
-# Prevent it from starting at boot
-sudo systemctl disable time-signal-web
-
-# Uninstall completely
-sudo systemctl stop    time-signal-web
-sudo systemctl disable time-signal-web
-sudo rm /etc/systemd/system/time-signal-web.service
-sudo systemctl daemon-reload
-```
-
-### Custom port
-
-The web server listens on port **8080** by default.  To use a different port, edit `/etc/systemd/system/time-signal-web.service`, uncomment the `Environment=TIMESIGNAL_PORT=…` line and set your preferred port, then reload:
-
-```bash
-sudo systemctl daemon-reload
-sudo systemctl restart time-signal-web
-```
-
-### Autostart behaviour
-
-The **Autostart** toggle in the web UI controls whether the transmitter starts automatically when the Pi boots.  The setting is stored in `web/config.json` (or the file named by `TIMESIGNAL_CONFIG`).  It is **independent** of whether the web server itself starts at boot (which is always enabled by the installer).
-
-### Clock sync and time zones
-
-A Raspberry Pi has no battery-backed clock, so until it has synchronised with internet time it can be hours or days out. The web server therefore **won't transmit until `timedatectl` reports the clock is NTP-synchronised**: autostart waits (the page shows *Waiting for time sync*), and the Start button explains why it can't start yet. Set `TIMESIGNAL_REQUIRE_TIME_SYNC=0` to turn this off.
-
-Each station broadcasts its own country's time, so the server starts the transmitter with the station's time zone (Japan for JJY, Germany for DCF77, UK for MSF, US Eastern for WWVB's daylight-saving bits). The Pi's own time zone doesn't matter.
-
-### Environment variables
+Settings are saved to `web/config.json`. The service can be tuned with
+environment variables in its systemd unit:
 
 | Variable | Default | Purpose |
 |---|---|---|
@@ -123,117 +89,85 @@ Each station broadcasts its own country's time, so the server starts the transmi
 | `TIMESIGNAL_DEFAULT_AUTOSTART` | `0` | Autostart before any setting is saved |
 | `TIMESIGNAL_REQUIRE_TIME_SYNC` | `1` | Refuse to transmit until the clock is synced |
 
+Managing the service:
+
+```bash
+sudo systemctl status time-signal-web      # is it running?
+sudo journalctl -u time-signal-web -f      # live logs
+sudo systemctl restart time-signal-web     # after changing settings
+sudo systemctl disable --now time-signal-web   # stop and don't start at boot
+```
+
+To uninstall, disable the service as above, then
+`sudo rm /etc/systemd/system/time-signal-web.service && sudo systemctl daemon-reload`.
+
+### Command line
+
+```bash
+sudo ./time-signal -s JJY60      # transmit the time signal
+sudo ./time-signal -s JJY60 -c   # carrier only, for tuning the antenna
+```
+
+| Option | Meaning |
+|---|---|
+| `-s <service>` | `DCF77`, `WWVB`, `JJY40`, `JJY60` or `MSF` |
+| `-c` | Carrier only, no time code (for tuning) |
+| `-v` | Verbose: show the modulation envelope |
+| `-h` | Help |
+
+Run directly, the binary uses the Pi's time zone. For JJY that means running
+it with `TZ=Asia/Tokyo` unless the Pi is set to Japan time; the web
+interface does this for you.
+
+Build only the binary with `make`. It needs `gcc` and must run as root.
+
+### Requirements
+
+- Raspberry Pi OS (Bookworm or later recommended), with `gcc` and `make`
+- Python 3.9 or newer for the web interface
+
 ### Tests
 
 ```bash
 python3 -m unittest discover -s tests -v
 ```
 
-They stub out the transmitter and `timedatectl`, so they run on any machine with Flask installed.
+They stub out the transmitter and `timedatectl`, so they run on any machine
+with Flask installed.
 
-### Manual start (without systemd)
-
-If you prefer to run the server manually, activate the virtual environment and start it directly:
-
-```bash
-sudo web/.venv/bin/python web/server.py
-```
-
-## CLI Usage
+## Repository layout
 
 ```
-sudo ./time-signal [OPTIONS]
+time-signal.c, time-services.c, clock-control.c   transmitter (C)
+web/                 Flask control panel
+install.sh           installs the binary and web service
+tests/               web server tests
+hardware/            circuit, breadboard, antenna, PCB, enclosure
+pi-setup/            scripts for plug-and-play give-away units
+docs/QUICKSTART.md   guide for people receiving a unit
 ```
-### Options
 
--s <service> :  Time service: either of DCF77, WWVB, JJY40, JJY60, MSF
+## Legal
 
--v : Verbose. Show modulation enveloppe.
+These are very low-power transmitters, but rules on radio transmission vary.
+Check yours before using one (in Australia, the ACMA LIPD class licence).
 
--c : Send carrier wave only, without time signal. Usefull for testing frequencies.
+## Credits and references
 
--h : This help.
+The transmitter is by Pierre Brial ([harlock974/time-signal](https://github.com/harlock974/time-signal)),
+based on Henner Zeller's [txtempus](https://github.com/hzeller/txtempus).
+Compared with txtempus, time-signal is written in C, builds without CMake, and
+needs no attenuation pin, so the hardware is simpler.
 
-## Hardware
+1. Slevin, Cohen and Golkowski (2021), "Wideband VLF/LF Transmission from an
+   Electrically-Small Antenna by Means of Time-Varying Non-Reciprocity via
+   High-Speed Switches", URSI GASS 2021.
+2. Ferrite antennas: <https://www.electronics-notes.com/articles/antennas-propagation/ferrite-rod-bar-antenna/basics-tutorial.php>
+3. Designing longer-range transmitters (txtempus discussion): <https://github.com/hzeller/txtempus/issues/8>
+4. Andreas Spiess, designing a DCF77 transmitter: <https://youtu.be/6SHGAEhnsYk>
+5. Wikipedia: [DCF77](https://en.wikipedia.org/wiki/DCF77),
+   [WWVB](https://en.wikipedia.org/wiki/WWVB),
+   [MSF](https://en.wikipedia.org/wiki/Time_from_NPL_(MSF)),
+   [JJY](https://en.wikipedia.org/wiki/JJY).
 
-### Circuits
-
-**time-signal** uses GPIO 4 (pin 7) to transmit the modulated carrier wave and a Ground pin. 5V power pin could also be used by your circuit if you want to amplify the signal.
-
-![Capture d’écran_2023-09-25_21-27-04](https://github.com/harlock974/time-signal/assets/6268242/d27c548d-a9a9-4dd3-8360-b7247b49799a)
-_[Raspberry Pi pinout](https://pinout.xyz)_
-
-The simplest hardware you can use to transmit the signal is to connect a coil and a 220Ω resistor in serie between GPIO4 and a ground pin :
-
-![IMG_20230925_212405](https://github.com/harlock974/time-signal/assets/6268242/79d53d74-a45c-4ef1-8484-cf3a85fff586)
-
-Here with a 60cm wire and 14 turns of 13mm diameter, the range is quite decent : 10cm for DCF77 and 45cm for JJY at 40 kHz. 
-
-For a longer range and still simple circuit, you can use a ferrite antenna salvaged from an AM receiver with a N mosfet as amplifier. You'll then have this 3 components + antenna circuit :
-
-![MOSFET_OSCILLATOR_JJY40 EMF](https://github.com/harlock974/time-signal/assets/6268242/0602c816-f4b7-4955-aaed-0eb1e36e3022)
-
-![DSC_4398s](https://github.com/harlock974/time-signal/assets/6268242/3a3ce337-c3cd-41d2-af07-a76bfd2c779e)
-
-_The hairy 3 components circuit_
-
-If you don't have a mosfet, you can use a NPN transistor instead with a 4.7K resistor between its base and GPIO4.
-
-![](SimpleRadio.jpg)
-
-C1 capacitor value depends on antenna inductance and target frequency (see below).
-
-As small mosfets like BS270 can handle up to 250 mA, you can design a more powerful transmitter with two complementary mosfets as a NOT gate and a lower value resistor :
-
-![DUAL-MOSFET_OSCILLATOR_JJY40s](https://github.com/harlock974/time-signal/assets/6268242/b53c2782-183a-449b-9a01-d93ef6c92044)
-
-
-I successfully tested these circuits with JJY40 et DCF77 signals and reached a range of ten meters with JJY40 and the dual mosfet configuration.
-
-![269642939-9069a2a0-c241-44fa-8030-728f90dce124](https://github.com/harlock974/time-signal/assets/6268242/c74016e5-7b95-4ce8-92b7-7234ac943319)
-
-_G-Shock strong reception (L3)_
-
-# Antennas
-
-There is much concern in radio communities about strength of the signal related to legal limits. But with low frequencies, it is very difficult to design a long range transmitting antenna :
-
-"The problem of designing compact, efficient, and broadband antennas capable of transmitting signals in the very low frequency (VLF, 3-30 kHz) and low frequency (LF, 30-300 kHz) bands has plagued engineers for decades [...] For instance, attempting to build a standard quarter-wave monopole at 30 kHz would require an antenna to be 2.5 km long, which is roughly three times longer than the tallest building on Earth"(1)
-
-For example, the [Ohtakadoyayama station](https://jjy.nict.go.jp/jjy/trans/index-e.html) antenna transmitting JJY 40 kHz signal is an umbrella type 250m high, and the [Mainflingen station](https://www.ptb.de/cms/en/ptb/fachabteilungen/abt4/fb-44/ag-442/dissemination-of-legal-time/dcf77/dcf77-transmitting-facilities.html) transmitting DCF77 at 77.5 kHz is a T-type 150m high.
-
-So building an efficient transmitting antenna is far beyond practical limits for the hobbyist. The solution here is to use a compact ferrite rod antenna. These ones can be salvaged from an AM Radio, as there is no longer AM broadcasting, or from a cheap DCF77 module. But "ferrite rod antennas are normally only used for receiving. They are rarely used for transmitting anything above low levels of power in view of their poor efficiency. They can be used as a very compact form of transmitting antenna for applications where efficiency is not an issue and where power levels are very low. If power levels rise too high then heat dissipation in the ferrite becomes an issue"(2).
-
-Hence don't expect to transmit outside your house. The longest range I succeeded to reach is 10 meters with a 40 kHz signal, with direct line of sight. The antenna was powered by the 5 V dual mosfet amplifier circuit. Increasing the voltage didn't improve the range. 
-
-You'll have to adjust the resonance of your antenna for the requested frequency, with the capacitor. Capacitor value depends on antenna inductance L and target frequency f :
-
-C = 1 / (4×π²×L×f²)`
-
-AM antennas have usually an inductance between 500 and 700 µH, so the theoretical C values are :
-
-* 40000 Hz : 26 nF
-* 60000 Hz : 12 nF
-* 77500 Hz :  7 nF
-
-If you have an oscilloscope, connect it between the antenna and the capacitor, run time-signal with '-c' option and change the value of the capacitor to obtain the larger and cleaner signal, that is a nice sinusoid.
-
-| Poorly tuned antenna (40kHz, 10nF) | Quite well tuned antenna (40kHz, 33nF) |
-| --- | --- |
-| ![DSC_4430-40kHz-10nF-Oregon-s](https://github.com/harlock974/time-signal/assets/6268242/f2e38580-56a7-433d-a44b-d1c1c54e14e7) | ![DSC_4429-40kHz-33nF-Oregon-s](https://github.com/harlock974/time-signal/assets/6268242/ba1f4ecf-09a3-4918-a5db-98147c262389) |
-
-# Credits and references
-
-Large parts of time-signal code come from Henner Zeller [txtempus](https://github.com/hzeller/txtempus). The main differences between time-signal and txtempus are :
-
-* txtempus works on Raspberry Pi 3 and Zero W and Jetson Nano ; time-signal works on Raspberry Pi 3, 4 and Zero W.
-* txtempus is written in C++ while time-signal is written in C and doesn't need CMake to be built.
-* time-signal doesn't use an attenuation pin, so the required hardware is simpler.
-
-Some useful references :
-
-1. New ideas about designing low frequencies antennas : Slevin, Cohen and Golkowski (2021), "Wideband VLF/LF Transmission from an Electrically-Small Antenna by Means of Time-Varying Non-Reciprocity via High-Speed Switches", URSI GASS 2021, Rome, Italy, 28 August - 4 September 2021.
-2. Ferrite antennas : https://www.electronics-notes.com/articles/antennas-propagation/ferrite-rod-bar-antenna/basics-tutorial.php
-3. Discussion in txtempus github about how to design longest range transmitters : https://github.com/hzeller/txtempus/issues/8
-4. Andreas Spiess video about designing a DCF77 transmitter : https://youtu.be/6SHGAEhnsYk
-5. Wikipedia pages about time services : [DCF77](https://en.wikipedia.org/wiki/DCF77), [WWVB](https://en.wikipedia.org/wiki/WWVB), [MSF](https://en.wikipedia.org/wiki/Time_from_NPL_(MSF)), [JJY](https://en.wikipedia.org/wiki/JJY).
+Licensed under the GNU GPL v3 (see [LICENSE](LICENSE)).

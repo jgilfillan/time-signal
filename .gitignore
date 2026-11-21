@@ -9,5 +9,5 @@ web/config.json
 # Build output
 /time-signal
 
-# Images built with appliance/build-image.sh
+# Images built with pi-setup/build-image.sh
 *.img

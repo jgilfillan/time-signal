@@ -3,7 +3,7 @@
 # plug-and-play time-signal transmitter you can give away.
 #
 # Run on the MASTER Pi (the one whose SD card you'll copy), from the repo:
-#   sudo ./appliance/setup-appliance.sh [options]
+#   sudo ./pi-setup/setup-appliance.sh [options]
 #
 # Options:
 #   --service SVC      station to transmit by default (default: JJY60)
@@ -20,7 +20,7 @@
 #     its hostname; joining it from a phone shows a page to pick the home Wi-Fi
 #   * a unique, stable hostname per Pi from its serial number (jjy-1a2b.local)
 #   * mounts for a small writable data partition labelled "tsdata" at /data,
-#     holding Wi-Fi settings and the app config (appliance/build-image.sh
+#     holding Wi-Fi settings and the app config (pi-setup/build-image.sh
 #     adds that partition to the image)
 #   * logs kept in RAM, DHCP identity tied to the Wi-Fi MAC address
 #
@@ -203,4 +203,4 @@ echo "  1. Reboot and test: join the '$(hostname)' hotspot, pick your Wi-Fi,"
 echo "     then open http://$(hostname).local:8080"
 echo "  2. Re-run with --enable-overlay once you're happy."
 echo "  3. Shut down, copy the card to an image on a Linux PC and run"
-echo "     appliance/build-image.sh on it to add the data partition."
+echo "     pi-setup/build-image.sh on it to add the data partition."

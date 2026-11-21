@@ -1,4 +1,4 @@
-# Making give-away transmitters
+# Pi set-up: making give-away transmitters
 
 This folder turns a Raspberry Pi Zero W / Zero 2 W with the time-signal pHAT
 into a plug-and-play gadget. The person you give it to only has to:
@@ -47,7 +47,7 @@ original Zero W.)
    sudo apt update && sudo apt install -y git
    git clone https://github.com/jgilfillan/time-signal.git
    cd time-signal
-   sudo ./appliance/setup-appliance.sh --service JJY60 --country AU --keep-ssh
+   sudo ./pi-setup/setup-appliance.sh --service JJY60 --country AU --keep-ssh
    sudo reboot
    ```
 
@@ -63,7 +63,7 @@ original Zero W.)
 4. When you're happy, lock it down and switch SSH off:
 
    ```bash
-   sudo ./appliance/setup-appliance.sh --service JJY60 --country AU --enable-overlay
+   sudo ./pi-setup/setup-appliance.sh --service JJY60 --country AU --enable-overlay
    sudo poweroff
    ```
 
@@ -82,7 +82,7 @@ original Zero W.)
 2. Build the image:
 
    ```bash
-   sudo ./appliance/build-image.sh master.img time-signal-appliance.img
+   sudo ./pi-setup/build-image.sh master.img time-signal-appliance.img
    ```
 
    This works on a copy and never changes `master.img`. It shrinks the root
@@ -98,7 +98,7 @@ Each Pi gives itself its own name from its serial number on first boot.
 
 Write the device name on a label on each box with the address, e.g.
 `jjy-1a2b` and `http://jjy-1a2b.local:8080`. Power one up once to read
-its name from the hotspot list. Hand over `docs/QUICKSTART.md` with it.
+its name from the hotspot list. Hand over [the quick-start guide](../docs/QUICKSTART.md) with it.
 
 ## Notes and limits
 

@@ -15,9 +15,14 @@ This file records the decisions made so far so a new session can carry on.
   that starts/stops the binary. `install.sh` installs it as `time-signal-web`.
 - `tests/test_server.py` — unittest suite; stubs the binary and `timedatectl`.
   Run `python3 -m unittest discover -s tests -v`.
-- `appliance/` — turning a Pi into a plug-and-play give-away (see below).
+- `pi-setup/` — turning a Pi into a plug-and-play give-away (see below).
 - `docs/QUICKSTART.md` — one-page guide for people receiving a unit.
-- `hardware/` — pHAT PCB, antenna build guide, 3D-printed enclosure.
+- `hardware/` — one folder per topic, each with a README: `schematic/`
+  (circuit diagram, KiCad schematic render/PDF), `breadboard/` (layout PNG +
+  interactive HTML), `antenna/`, `pcb/` (KiCad project, JLCPCB files,
+  generator scripts), `enclosure/` (OpenSCAD, STLs). `hardware/README.md`
+  is the index. The top-level README is the front page; its `#software`
+  anchor is linked from hardware READMEs.
 
 ## Web server behaviour (changed in this fork)
 
@@ -35,7 +40,7 @@ This file records the decisions made so far so a new session can carry on.
   `station_time`/`station_tz`, `hostname`, `addresses`, `port`.
 - Needs Python ≥ 3.9 (`zoneinfo`).
 
-## Appliance design (appliance/)
+## Appliance design (pi-setup/)
 
 Goal: recipient plugs in, picks Wi-Fi on a phone, done.
 - **OS:** Raspberry Pi OS Lite **32-bit** so one image runs on Pi Zero W and
@@ -87,7 +92,7 @@ Goal: recipient plugs in, picks Wi-Fi on a phone, done.
 - Confirm the breadboard's final capacitor total (owner to check); if it
   differs from 11.5 nF, change C1/C2 on the board.
 - Order PCBs; print the enclosure; check port cut-outs with real cables.
-- Upstream note: Pi 4 frequency generation is known not to work.
+- Upstream tested on Pi Zero W, Pi 3 B and Pi 4 B; Zero 2 W untested.
 
 ## Conventions
 
