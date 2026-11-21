@@ -10,6 +10,12 @@ A multiband time signal radio transmitter for Raspberry Pi.
 * Raspberry Pi 3 Model B Rev 1.2
 * Raspberry Pi 4 Model B Rev 1.1
 
+## In this fork
+
+* **[hardware/](hardware/)** — a Pi Zero pHAT (KiCad, ready to order assembled from JLCPCB), a 3-rod ferrite antenna and a 3D-printed enclosure.
+* **[appliance/](appliance/)** — scripts to turn a Pi into a plug-and-play gift: Wi-Fi set-up from a phone, auto-start once the clock is synced, read-only SD card. Recipients get [docs/QUICKSTART.md](docs/QUICKSTART.md).
+* The web interface now waits for internet time before transmitting, and always sends each station's own time (Japan time for JJY) whatever time zone the Pi is set to.
+
 ## Build
 
 Inside the directory where the source files are, simply type `make`
@@ -37,7 +43,7 @@ The installer will:
 1. Compile the `time-signal` binary (if not already built)
 2. Create a Python virtual environment in `web/.venv`
 3. Install Flask into that environment
-4. Optionally guide you through configuring a static IP address
+4. Optionally guide you through configuring a static IP address (skipped with `--non-interactive`)
 5. Install and start a `systemd` service (`time-signal-web`) that runs the web server on port **8080**
 
 Once complete, open a browser and navigate to:
@@ -62,7 +68,7 @@ The installer auto-detects whether your Pi uses **NetworkManager** (Raspberry Pi
 
 ### Requirements
 
-* Python 3.7 or newer (pre-installed on Raspberry Pi OS Bullseye / Bookworm)
+* Python 3.9 or newer (pre-installed on Raspberry Pi OS Bullseye / Bookworm)
 * `gcc` and `make` (pre-installed on Raspberry Pi OS)
 * Root privileges for the installer (`sudo ./install.sh`)
 
@@ -99,7 +105,31 @@ sudo systemctl restart time-signal-web
 
 ### Autostart behaviour
 
-The **Autostart** toggle in the web UI controls whether the transmitter starts automatically when the Pi boots.  The setting is stored in `web/config.json`.  It is **independent** of whether the web server itself starts at boot (which is always enabled by the installer).
+The **Autostart** toggle in the web UI controls whether the transmitter starts automatically when the Pi boots.  The setting is stored in `web/config.json` (or the file named by `TIMESIGNAL_CONFIG`).  It is **independent** of whether the web server itself starts at boot (which is always enabled by the installer).
+
+### Clock sync and time zones
+
+A Raspberry Pi has no battery-backed clock, so until it has synchronised with internet time it can be hours or days out. The web server therefore **won't transmit until `timedatectl` reports the clock is NTP-synchronised**: autostart waits (the page shows *Waiting for time sync*), and the Start button explains why it can't start yet. Set `TIMESIGNAL_REQUIRE_TIME_SYNC=0` to turn this off.
+
+Each station broadcasts its own country's time, so the server starts the transmitter with the station's time zone (Japan for JJY, Germany for DCF77, UK for MSF, US Eastern for WWVB's daylight-saving bits). The Pi's own time zone doesn't matter.
+
+### Environment variables
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `TIMESIGNAL_PORT` | `8080` | Web server port |
+| `TIMESIGNAL_CONFIG` | `web/config.json` | Where settings are saved |
+| `TIMESIGNAL_DEFAULT_SERVICE` | `DCF77` | Station used before any setting is saved |
+| `TIMESIGNAL_DEFAULT_AUTOSTART` | `0` | Autostart before any setting is saved |
+| `TIMESIGNAL_REQUIRE_TIME_SYNC` | `1` | Refuse to transmit until the clock is synced |
+
+### Tests
+
+```bash
+python3 -m unittest discover -s tests -v
+```
+
+They stub out the transmitter and `timedatectl`, so they run on any machine with Flask installed.
 
 ### Manual start (without systemd)
 
