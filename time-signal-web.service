@@ -1,0 +1,21 @@
+[Unit]
+Description=time-signal Web Interface
+Documentation=https://github.com/harlock974/time-signal
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+# INSTALL_DIR is replaced by install.sh with the actual project path
+WorkingDirectory=INSTALL_DIR/web
+ExecStart=INSTALL_DIR/web/.venv/bin/python INSTALL_DIR/web/server.py
+Restart=on-failure
+RestartSec=5
+User=root
+StandardOutput=journal
+StandardError=journal
+# Optionally override the default port:
+# Environment=TIMESIGNAL_PORT=8080
+
+[Install]
+WantedBy=multi-user.target

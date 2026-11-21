@@ -14,7 +14,102 @@ A multiband time signal radio transmitter for Raspberry Pi.
 
 Inside the directory where the source files are, simply type `make`
 
-## Usage
+## Web Interface
+
+**time-signal** includes a browser-based control panel that you can access from any device on your home network — phone, tablet, laptop, etc.  It lets you:
+
+* Start and stop the radio transmission
+* Select the time service (DCF77, WWVB, JJY40, JJY60, MSF)
+* Toggle **autostart** — automatically begin transmitting whenever the Raspberry Pi boots
+* Watch live output from the transmitter
+
+### Quick-start
+
+```bash
+# Clone / enter the repository
+cd time-signal
+
+# Build the binary and install the web interface (one command)
+sudo ./install.sh
+```
+
+The installer will:
+1. Compile the `time-signal` binary (if not already built)
+2. Create a Python virtual environment in `web/.venv`
+3. Install Flask into that environment
+4. Optionally guide you through configuring a static IP address
+5. Install and start a `systemd` service (`time-signal-web`) that runs the web server on port **8080**
+
+Once complete, open a browser and navigate to:
+
+```
+http://<raspberry-pi-hostname-or-ip>:8080
+```
+
+You can find the Pi's IP address with `hostname -I`.
+
+### Optional static IP setup
+
+During installation, you will be asked whether you want to configure a static IP.
+
+If you choose **yes**, the installer will prompt for:
+* Interface (for example `wlan0` or `eth0`)
+* Static IP address and CIDR prefix
+* Gateway/router IP
+* DNS servers
+
+The installer auto-detects whether your Pi uses **NetworkManager** (Raspberry Pi OS Bookworm and newer) or **dhcpcd** (older releases) and applies the settings with the right tool.  For dhcpcd it also creates a timestamped backup of `/etc/dhcpcd.conf` before making any changes.
+
+### Requirements
+
+* Python 3.7 or newer (pre-installed on Raspberry Pi OS Bullseye / Bookworm)
+* `gcc` and `make` (pre-installed on Raspberry Pi OS)
+* Root privileges for the installer (`sudo ./install.sh`)
+
+### Managing the service
+
+```bash
+# Check the web server is running
+sudo systemctl status time-signal-web
+
+# Follow live logs
+sudo journalctl -u time-signal-web -f
+
+# Stop the web server
+sudo systemctl stop time-signal-web
+
+# Prevent it from starting at boot
+sudo systemctl disable time-signal-web
+
+# Uninstall completely
+sudo systemctl stop    time-signal-web
+sudo systemctl disable time-signal-web
+sudo rm /etc/systemd/system/time-signal-web.service
+sudo systemctl daemon-reload
+```
+
+### Custom port
+
+The web server listens on port **8080** by default.  To use a different port, edit `/etc/systemd/system/time-signal-web.service`, uncomment the `Environment=TIMESIGNAL_PORT=…` line and set your preferred port, then reload:
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl restart time-signal-web
+```
+
+### Autostart behaviour
+
+The **Autostart** toggle in the web UI controls whether the transmitter starts automatically when the Pi boots.  The setting is stored in `web/config.json`.  It is **independent** of whether the web server itself starts at boot (which is always enabled by the installer).
+
+### Manual start (without systemd)
+
+If you prefer to run the server manually, activate the virtual environment and start it directly:
+
+```bash
+sudo web/.venv/bin/python web/server.py
+```
+
+## CLI Usage
 
 ```
 sudo ./time-signal [OPTIONS]
