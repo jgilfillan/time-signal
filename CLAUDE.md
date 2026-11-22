@@ -91,7 +91,10 @@ Goal: recipient plugs in, picks Wi-Fi on a phone, done.
   ~610 µH needed for 11.5 nF at 60 kHz.
 - **Enclosure:** OpenSCAD, 194 × 70 × 36 mm, Pi stack front-left on M2.5 ×
   11 mm male-female standoffs, antenna in four saddles along the back wall (cable-tie tunnels under the middle two, open both ends; 3 mm gap to the back wall),
-  M3 lid screws. Checked for collisions with modelled parts; not yet printed.
+  M3 lid screws (bosses r 3.6 so the Pi stack and antenna drop straight in;
+  Pi at x 7 mm). Checks: collisions, vertical drop-in sweeps, cable-tie path,
+  PrusaSlicer slice with no supports (base ~80 g, lid ~29 g; lid text triggers a
+  harmless "long bridging" warning). Not yet printed.
 
 ## Open items
 

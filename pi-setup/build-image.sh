@@ -53,7 +53,7 @@ for t in losetup sfdisk e2fsck resize2fs dumpe2fs mkfs.ext4 blkid; do
 done
 [ -f "$SRC" ] || die "No such image: $SRC"
 [ ! -e "$OUT" ] || die "$OUT already exists — choose another name or delete it"
-[[ "$DATA_MB" =~ ^[0-9]+$ ]] && [ "$DATA_MB" -ge 16 ] || die "--data-mb must be at least 16"
+if ! [[ "$DATA_MB" =~ ^[0-9]+$ ]] || [ "$DATA_MB" -lt 16 ]; then die "--data-mb must be at least 16"; fi
 [[ "$ROOT_FREE_MB" =~ ^[0-9]+$ ]] || die "--root-free-mb must be a number"
 
 LOOPS=(); MNT=""

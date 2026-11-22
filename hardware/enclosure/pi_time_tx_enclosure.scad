@@ -27,7 +27,7 @@ fit    = 0.3;        // clearance between lid lip and walls
 
 // ---------------- Pi Zero + pHAT placement ----------------
 pi_L = 65; pi_W = 30; pcb_t = 1.6;
-pi_x0 = 6.0;                         // gap to left wall (room for the microSD card)
+pi_x0 = 7.0;                         // gap to left wall (room for the microSD card; clears the corner boss)
 pi_y0 = 1.0;                         // port edge 1 mm from the front wall
 standoff_h = 5.0;                    // Pi underside height above the floor
 pi_z = standoff_h;                   // Pi PCB bottom
@@ -49,7 +49,7 @@ saddle_x = [22, 62, 128, 168];       // keep clear of the winding at the centre
 cradle_r = 10.8;                     // fits the taped 3-rod bundle (~19-20 mm across)
 
 // ---------------- lid screws ----------------
-boss_r = 4.2;
+boss_r = 3.6;                        // slim enough that the Pi stack and antenna drop straight in
 boss_in = boss_r - 1.5;              // centres sit so the bosses merge into the corner walls
 boss_pts = [[boss_in, boss_in], [L_in - boss_in, boss_in],
             [boss_in, W_in - boss_in], [L_in - boss_in, W_in - boss_in]];
@@ -82,7 +82,7 @@ module base() {
             // sloped support from the corner wall up to each boss (about 45 degrees)
             for (p = boss_pts) hull() {
                 translate([p[0], p[1], boss_z0]) cylinder(r = boss_r, h = 0.5);
-                translate([p[0] < L_in / 2 ? -1 : L_in + 1, p[1] < W_in / 2 ? -1 : W_in + 1, boss_z0 - 10])
+                translate([p[0] < L_in / 2 ? -0.4 : L_in + 0.4, p[1] < W_in / 2 ? -0.4 : W_in + 0.4, boss_z0 - 10])
                     cylinder(r = 0.6, h = 0.5);
             }
         }

@@ -190,7 +190,8 @@ configure_static_ip() {
   elif [ -f "/etc/dhcpcd.conf" ]; then
     # ── dhcpcd path ───────────────────────────────────────────────────────
     local dhcpcd_conf="/etc/dhcpcd.conf"
-    local backup_file="$dhcpcd_conf.time-signal.bak.$(date +%Y%m%d%H%M%S)"
+    local backup_file
+    backup_file="$dhcpcd_conf.time-signal.bak.$(date +%Y%m%d%H%M%S)"
 
     cp "$dhcpcd_conf" "$backup_file"
     sed -i '/^# >>> time-signal static ip >>>$/,/^# <<< time-signal static ip <<</d' "$dhcpcd_conf"

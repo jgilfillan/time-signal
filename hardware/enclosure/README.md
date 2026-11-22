@@ -19,9 +19,14 @@ wall.
   a 180 mm bed such as the A1 mini is too small).
 - PLA or PETG, 0.2 mm layers, 3 walls, 15-20 % infill, **no supports**.
 - Base: print open side up. Lid: print as exported (flat face down, lip up).
-- Rough material use: about 60-70 g (base) and 25 g (lid).
-- Everything is designed to print without supports: the port openings are short bridges and
-  the lid-screw bosses have 45-degree ramps underneath.
+- Material and time (PrusaSlicer, PLA, 0.2 mm, 3 walls, 18 % infill): base about 80 g and
+  7 h 15 min; lid about 29 g and 2 h 45 min.
+- Everything is designed to print without supports. The only overhangs are short bridges
+  (port openings up to 26 mm, the microSD slot, the 5 mm cable-tie tunnels) and the
+  lid-screw bosses, which sit on ramps of about 40 degrees.
+- PrusaSlicer warns "long bridging extrusions" on the lid. That comes from the engraved
+  text on its outer face (the face on the bed), and is safe to ignore. Don't turn supports on,
+  or they'll fill the letters.
 
 ## Hardware
 | Qty | Part | Used for |
@@ -39,7 +44,9 @@ Keep metal screws and standoffs to the Pi end of the box; nothing metal sits nea
 
 ![Exploded view of the whole unit, numbered in assembly order](render_exploded_full.png)
 
-1. Fit a microSD card in the Pi first (it's reachable through the slot in the left end later).
+1. Flash and fit the microSD card first. Once the Pi is in, the card sits about 4.5 mm in from
+   the left wall: swap it later with the lid off, using tweezers or small pliers (the slot in the
+   left end lets you see it and give it a push).
 2. Screw the 4 male-female standoffs down through the Pi's mounting holes into the printed
    posts in the base. The male thread self-taps into the 2.2 mm holes; don't overtighten.
    The Pi's ports line up with the openings in the front wall.
@@ -114,6 +121,10 @@ the long side. A clock turned 90 degrees to the box may not pick up the signal a
   collisions with the base and lid: none.
 - A 2.4 x 1.0 mm cable tie was modelled along its path (through the tunnel, up both faces of
   the saddle and over the bundle) and checked against the base, lid and contents: no collisions.
+- The Pi/pHAT outline (plus 0.5 mm) and the taped rod bundle were swept straight down from
+  above the box: nothing in the base is in the way, so both drop straight in.
+- Both parts slice in PrusaSlicer with supports off and no stability warnings (apart from
+  the lid text note above).
 - Port positions use the Pi Zero's published mechanical drawing (mini-HDMI at 12.4 mm,
   USB at 41.4 mm, PWR at 54.0 mm from the left edge). The openings are oversized so moulded
   cable plugs fit. Print a test strip of the front wall first if your cables are unusually bulky.
