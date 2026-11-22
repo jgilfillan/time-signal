@@ -9,7 +9,8 @@ wall.
 | ![Exploded view](render_exploded.png) | ![Assembled view](render_assembly.png) |
 
 - Outside size: 194.4 x 70.4 x 36 mm (base 34 mm + lid 2 mm)
-- Parts: `base.stl`, `lid.stl` (the lid is already flipped for printing)
+- Parts: `base.stl`, `lid.stl` (the lid is already flipped for printing), plus two small
+  fit-test pieces, `test_fit_base.stl` and `test_fit_lid.stl` (see below)
 - Source: `pi_time_tx_enclosure.scad` (OpenSCAD; every dimension is a named variable at the top).
   Set `PART` to `full_exploded` for the numbered exploded view, or `stack_exploded` /
   `stack_assembled` for the close-ups of the Pi and pHAT.
@@ -19,14 +20,49 @@ wall.
   a 180 mm bed such as the A1 mini is too small).
 - PLA or PETG, 0.2 mm layers, 3 walls, 15-20 % infill, **no supports**.
 - Base: print open side up. Lid: print as exported (flat face down, lip up).
-- Material and time (PrusaSlicer, PLA, 0.2 mm, 3 walls, 18 % infill): base about 80 g and
-  7 h 15 min; lid about 29 g and 2 h 45 min.
+- Material and time (PrusaSlicer, PLA, 0.2 mm, 3 walls, 18 % infill): base about 79 g and
+  7 h 10 min; lid about 29 g and 2 h 45 min.
 - Everything is designed to print without supports. The only overhangs are short bridges
-  (port openings up to 26 mm, the microSD slot, the 5 mm cable-tie tunnels) and the
+  (port openings up to 29 mm, the microSD slot, the 5.5 mm cable-tie tunnels) and the
   lid-screw bosses, which sit on ramps of about 40 degrees.
 - PrusaSlicer warns "long bridging extrusions" on the lid. That comes from the engraved
   text on its outer face (the face on the bed), and is safe to ignore. Don't turn supports on,
   or they'll fill the letters.
+
+### Tolerances
+
+The clearances are deliberately generous so the parts go together straight off an
+ordinary, untuned printer. They're all set in one block at the top of the `.scad` file:
+
+| Setting | Default | What it gives |
+|---|---|---|
+| `fit` | 0.5 mm | gap each side between the lid's locating lip and the walls |
+| `boss_gap` | 1.0 mm | room round each screw boss in the lid lip |
+| `port_extra` | 1.5 mm | extra room round the HDMI, USB and microSD openings, each side |
+| `cradle_gap` | 1.0 mm | saddle radius over the taped rod bundle (cradle 22.2 mm across) |
+| `tape` | 0.4 mm | tape thickness allowed for on the bundle |
+| `tie_slot` | 5.5 × 2.8 mm | cable-tie tunnel (for 2.5 × 1.1 mm ties) |
+| `tie_gap` | 3.5 mm | space behind each saddle for the tie to come out |
+
+Other clearances in the model: the Pi and pHAT drop past the corner bosses with at least
+1 mm to spare, the board edge sits 1.5 mm from the front wall, the taped rod bundle clears
+the bosses by more than 1.5 mm, M3 lid holes are 3.6 mm, and the screw terminal has about
+2.8 mm under the lid.
+
+The only deliberately tight holes are the pilots that screws cut their own thread into:
+2.2 mm for the M2.5 standoffs and 2.5 mm for the M3 lid screws. If your printer makes
+holes small and the screws are very stiff, open them with a drill of the same size.
+
+### Test the fit first (optional)
+
+![Fit-test pieces](render_fit_test.png)
+
+`test_fit_base.stl` is the front-left corner of the base (Pi posts, port openings, microSD
+slot and one lid boss); `test_fit_lid.stl` is the matching corner of the lid. Together they
+take about 21 g and 2 hours. Check that the Pi screws onto the posts, your cables plug in
+through the openings, and the lid corner drops in and screws down. If something's off,
+change the setting above and export again (set `PART` to `"base"`, `"lid"`, `"test_base"`
+or `"test_lid"` in OpenSCAD, then File > Export > STL).
 
 ## Hardware
 | Qty | Part | Used for |
@@ -64,8 +100,8 @@ Keep metal screws and standoffs to the Pi end of the box; nothing metal sits nea
 
 ![Cross-section through a saddle showing the cable tie path](render_cable_tie_section.png)
 
-Each of the middle two saddles has a 5 × 2.6 mm tunnel under its cradle. It's open at
-both ends: at the front face of the saddle, and into a 3 mm gap between the back of the
+Each of the middle two saddles has a 5.5 × 2.8 mm tunnel under its cradle. It's open at
+both ends: at the front face of the saddle, and into a 3.5 mm gap between the back of the
 saddle and the back wall. The tie loops through the tunnel and over the bundle, so it
 holds the rods down without anything metal near the ferrite.
 
@@ -121,8 +157,9 @@ the long side. A clock turned 90 degrees to the box may not pick up the signal a
   collisions with the base and lid: none.
 - A 2.4 x 1.0 mm cable tie was modelled along its path (through the tunnel, up both faces of
   the saddle and over the bundle) and checked against the base, lid and contents: no collisions.
-- The Pi/pHAT outline (plus 0.5 mm) and the taped rod bundle were swept straight down from
-  above the box: nothing in the base is in the way, so both drop straight in.
+- The Pi/pHAT outline (plus 1 mm) and the taped rod bundle (plus 1.5 mm at the bosses) were
+  swept straight down from above the box: nothing in the base is in the way, so both drop
+  straight in. The rods rest on the cradle walls rather than sitting in them.
 - Both parts slice in PrusaSlicer with supports off and no stability warnings (apart from
   the lid text note above).
 - Port positions use the Pi Zero's published mechanical drawing (mini-HDMI at 12.4 mm,

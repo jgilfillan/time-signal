@@ -89,12 +89,17 @@ Goal: recipient plugs in, picks Wi-Fi on a phone, done.
 - **Antenna:** 3 × 9 × 180 mm ferrite rods (Jaycar LF1012) in a triangle,
   ~55 turns 0.25 mm enamelled wire, tight single layer at the centre.
   ~610 µH needed for 11.5 nF at 60 kHz.
-- **Enclosure:** OpenSCAD, 194 × 70 × 36 mm, Pi stack front-left on M2.5 ×
-  11 mm male-female standoffs, antenna in four saddles along the back wall (cable-tie tunnels under the middle two, open both ends; 3 mm gap to the back wall),
-  M3 lid screws (bosses r 3.6 so the Pi stack and antenna drop straight in;
-  Pi at x 7 mm). Checks: collisions, vertical drop-in sweeps, cable-tie path,
-  PrusaSlicer slice with no supports (base ~80 g, lid ~29 g; lid text triggers a
-  harmless "long bridging" warning). Not yet printed.
+- **Enclosure:** OpenSCAD, 194 × 70 × 36 mm, Pi stack front-left (x 7, y 1.5)
+  on M2.5 × 11 mm male-female standoffs, antenna resting in four saddles along
+  the back wall (cable-tie tunnels 5.5 × 2.8 under the middle two, 3.5 mm gap
+  behind), M3 lid screws into r 3.6 corner bosses. Print tolerances are one
+  block at the top of the .scad (`fit` 0.5, `boss_gap` 1.0, `port_extra` 1.5,
+  `cradle_gap` 1.0, `tape` 0.4, `tie_slot`, `tie_gap`); only the self-tapping
+  pilots (2.2 / 2.5 mm) are tight on purpose. `test_fit_base/lid.stl` are
+  corner pieces for a fit check. Checks: collisions, drop-in sweeps (Pi +1 mm,
+  bundle +1.5 mm at bosses), tie path, PrusaSlicer with no supports (base
+  ~79 g, lid ~29 g; lid text gives a harmless "long bridging" warning).
+  Not yet printed.
 
 ## Open items
 

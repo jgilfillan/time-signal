@@ -8,27 +8,38 @@
 //   "exploded" coloured exploded view
 //   "stack_exploded" / "stack_assembled"  close-up of fitting the pHAT to the Pi
 //   "full_exploded"  every part, spread out in assembly order
+//   "test_base" / "test_lid"  small corner pieces to check the fit before the full print
 //   "check_hit_base" / "check_hit_lid"  collision tests (should render empty)
 PART = "assembly";
 
 $fn = 48;
+
+// ---------------- print tolerances (mm) ----------------
+// Generous defaults for an ordinary FDM printer. Tighten them if your
+// printer is well calibrated; loosen them if parts bind.
+fit        = 0.5;    // lid lip to inside of the walls, each side
+boss_gap   = 1.0;    // lid lip cut-out round each screw boss
+port_extra = 1.5;    // extra room round each port opening, each side
+cradle_gap = 1.0;    // antenna saddle radius over the taped bundle
+tape       = 0.4;    // electrical-tape thickness assumed on the rod bundle
+tie_slot   = [5.5, 2.8];   // cable-tie tunnel width x height (2.5 x 1.1 mm ties)
+tie_gap    = 3.5;    // space behind each saddle for the tie to come out
 
 // ---------------- main dimensions (mm) ----------------
 wall   = 2.2;        // side walls
 floor_t = 2.0;       // base floor
 lid_t  = 2.0;        // lid plate
 L_in   = 190;        // inside length  (rods are 180 mm)
-W_in   = 66;         // inside depth (leaves a 3 mm gap behind the saddles for the cable ties)
+W_in   = 66;         // inside depth
 H_in   = 32;         // inside height (floor top to lid underside)
 L_out  = L_in + 2 * wall;
 W_out  = W_in + 2 * wall;
 H_base = floor_t + H_in;
-fit    = 0.3;        // clearance between lid lip and walls
 
 // ---------------- Pi Zero + pHAT placement ----------------
 pi_L = 65; pi_W = 30; pcb_t = 1.6;
 pi_x0 = 7.0;                         // gap to left wall (room for the microSD card; clears the corner boss)
-pi_y0 = 1.0;                         // port edge 1 mm from the front wall
+pi_y0 = 1.5;                         // port edge 1.5 mm from the front wall (connectors overhang 0.5 mm)
 standoff_h = 5.0;                    // Pi underside height above the floor
 pi_z = standoff_h;                   // Pi PCB bottom
 stack = 11.0;                        // Pi PCB top to pHAT PCB bottom (M2.5 x 11 spacers)
@@ -42,11 +53,17 @@ sd_yc = 16.9;                        // microSD centre from the port edge
 
 // ---------------- antenna ----------------
 rod_d = 9; rod_L = 180;
-ant_yc = W_in - 16;                  // bundle centre line (along the back wall)
-ant_zc = 16;                         // bundle centre height
+// three 9 mm rods in a triangle: the circle that touches all three has radius
+// rod_d/2 + rod_d/sqrt(3) = 9.7 mm; add the tape
+bundle_R = rod_d / 2 + rod_d / sqrt(3) + tape;
+cradle_r = bundle_R + cradle_gap;    // 11.1 mm with the defaults
+saddle_len = 2 * cradle_r + 3.4;     // leaves 1.7 mm walls at the top of the cradle
+ant_yc = W_in - tie_gap - saddle_len / 2;   // bundle centre line (along the back wall)
+ant_zc = 17;                         // cradle centre height (= saddle height)
 ant_x0 = (L_in - rod_L) / 2;
 saddle_x = [22, 62, 128, 168];       // keep clear of the winding at the centre
-cradle_r = 10.8;                     // fits the taped 3-rod bundle (~19-20 mm across)
+// the bundle rests with its two lower rods on the cradle; antenna() origin height:
+ant_z = ant_zc - sqrt(pow(cradle_r - rod_d / 2, 2) - pow(rod_d / 2, 2)) + rod_d / 2 / sqrt(3);
 
 // ---------------- lid screws ----------------
 boss_r = 3.6;                        // slim enough that the Pi stack and antenna drop straight in
@@ -55,7 +72,7 @@ boss_pts = [[boss_in, boss_in], [L_in - boss_in, boss_in],
             [boss_in, W_in - boss_in], [L_in - boss_in, W_in - boss_in]];
 boss_z0 = 22;                        // hanging bosses start above the pHAT
 pilot_d = 2.5;                       // M3 self-tapping screw pilot
-screw_d = 3.4;
+screw_d = 3.6;                       // M3 clearance hole in the lid
 
 // ======================================================
 module rounded_box(l, w, h, r) {
@@ -74,7 +91,7 @@ module base() {
             for (h = holes) translate([pi_x0 + h[0], pi_y0 + h[1], -0.01])
                 cylinder(d = 6, h = standoff_h);
             // antenna saddles
-            for (x = saddle_x) translate([x - 4, ant_yc - 13, -0.01]) saddle();
+            for (x = saddle_x) translate([x - 4, ant_yc - saddle_len / 2, -0.01]) saddle();
             // hanging lid-screw bosses (45 degree cone underneath, prints without support)
             for (p = boss_pts) translate([p[0], p[1], 0]) {
                 translate([0, 0, boss_z0]) cylinder(r = boss_r, h = H_in - boss_z0);
@@ -92,10 +109,13 @@ module base() {
         // lid screw pilots
         for (p = boss_pts) translate([p[0], p[1], H_in - 10]) cylinder(d = pilot_d, h = 11);
         // front wall: mini-HDMI and the two micro-USB ports (one shared slot)
-        translate([pi_x0 + hdmi_x - 7, -wall - 1, port_zc - 4.5]) cube([14, wall + 2, 9]);
-        translate([pi_x0 + usb_x - 6.5, -wall - 1, port_zc - 4.5]) cube([pwr_x - usb_x + 13, wall + 2, 9]);
+        translate([pi_x0 + hdmi_x - 7 - port_extra, -wall - 1, port_zc - 4.5 - port_extra])
+            cube([14 + 2 * port_extra, wall + 2, 9 + 2 * port_extra]);
+        translate([pi_x0 + usb_x - 6.5 - port_extra, -wall - 1, port_zc - 4.5 - port_extra])
+            cube([pwr_x - usb_x + 13 + 2 * port_extra, wall + 2, 9 + 2 * port_extra]);
         // left wall: microSD access
-        translate([-wall - 1, pi_y0 + sd_yc - 7, pi_z - 1.5]) cube([wall + 2, 14, 5.5]);
+        translate([-wall - 1, pi_y0 + sd_yc - 7 - port_extra, pi_z - 1.5 - port_extra / 2])
+            cube([wall + 2, 14 + 2 * port_extra, 5.5 + port_extra]);
         // label on the floor underside
         translate([L_out / 2 - wall, W_out / 2 - wall, -floor_t - 0.01])
             mirror([1, 0, 0]) linear_extrude(0.6)
@@ -105,10 +125,10 @@ module base() {
 
 module saddle() {
     difference() {
-        cube([8, 26, ant_zc]);
-        translate([-1, 13, ant_zc]) rotate([0, 90, 0]) cylinder(r = cradle_r, h = 10);
-        // zip-tie tunnel under the cradle
-        translate([1.5, -1, 1.5]) cube([5, 28, 2.6]);
+        cube([8, saddle_len, ant_zc]);
+        translate([-1, saddle_len / 2, ant_zc]) rotate([0, 90, 0]) cylinder(r = cradle_r, h = 10, $fn = 96);
+        // cable-tie tunnel under the cradle, open at both ends
+        translate([(8 - tie_slot[0]) / 2, -1, 1.2]) cube([tie_slot[0], saddle_len + 2, tie_slot[1]]);
     }
 }
 
@@ -120,13 +140,13 @@ module lid() {
             difference() {
                 translate([fit, fit, -3]) cube([L_in - 2 * fit, W_in - 2 * fit, 3]);
                 translate([fit + 1.2, fit + 1.2, -4]) cube([L_in - 2 * fit - 2.4, W_in - 2 * fit - 2.4, 5]);
-                for (p = boss_pts) translate([p[0], p[1], -5]) cylinder(r = boss_r + 0.6, h = 6);
+                for (p = boss_pts) translate([p[0], p[1], -5]) cylinder(r = boss_r + boss_gap, h = 6);
             }
         }
         // countersunk M3 holes
         for (p = boss_pts) translate([p[0], p[1], -1]) {
             cylinder(d = screw_d, h = lid_t + 2);
-            translate([0, 0, lid_t + 1 - 1.7]) cylinder(d1 = screw_d, d2 = 6.4, h = 1.71);
+            translate([0, 0, lid_t + 1 - 1.7]) cylinder(d1 = screw_d, d2 = 6.8, h = 1.71);
         }
         // vents over the Pi
         for (i = [0 : 8]) translate([pi_x0 + 10 + i * 5.5, pi_y0 + 6, -1]) cube([2.2, 20, lid_t + 2]);
@@ -179,7 +199,7 @@ module contents(dz = 0) {
     translate([pi_x0, pi_y0, hat_z + dz * 1.6]) phat();
     for (h = holes) color("gold") translate([pi_x0 + h[0], pi_y0 + h[1], pi_z + pcb_t + dz])
         cylinder(d = 5, h = stack, $fn = 6);
-    translate([ant_x0, ant_yc, ant_zc - 1.3 + dz * 0.6]) antenna();
+    translate([ant_x0, ant_yc, ant_z + dz * 0.6]) antenna();
 }
 
 
@@ -242,7 +262,7 @@ module full_exploded(e = 22) {
     }
     // antenna and its two cable ties (back wall)
     ant_dy = 1.8 * e;             // pulled back so it doesn't hide the Pi stack
-    translate([ant_x0, ant_yc + ant_dy, ant_zc - 1.3 + 1.4 * e]) antenna();
+    translate([ant_x0, ant_yc + ant_dy, ant_z + 1.4 * e]) antenna();
     for (x = [saddle_x[1], saddle_x[2]]) translate([x - 1.25, ant_yc + ant_dy, ant_zc + 2.4 * e]) cable_tie();
     // lid and its screws
     color("#e9e9e4") translate([0, 0, H_in + 5.2 * e]) lid();
@@ -252,6 +272,17 @@ module full_exploded(e = 22) {
 if (PART == "base") base();
 else if (PART == "lid") translate([0, W_in, lid_t]) rotate([180, 0, 0]) lid();
 else if (PART == "check_contents") contents();
+// fit-test pieces: the front-left corner (Pi posts, ports, microSD slot, one lid
+// screw) of the base, and the matching corner of the lid, printed in the same
+// orientations as the full parts
+else if (PART == "test_base") intersection() {
+    base();
+    translate([-wall - 1, -wall - 1, -floor_t - 1]) cube([pi_x0 + pi_L + 6 + wall, 36 + wall, H_base + 2]);
+}
+else if (PART == "test_lid") translate([0, W_in, lid_t]) rotate([180, 0, 0]) intersection() {
+    lid();
+    translate([-wall - 1, -wall - 1, -5]) cube([pi_x0 + pi_L + 6 + wall, 36 + wall, 10]);
+}
 else if (PART == "check_hit_base") intersection() { base(); translate([0, 0, 0.05]) contents(); }
 else if (PART == "check_hit_lid") intersection() { translate([0, 0, H_in]) lid(); contents(); }
 else if (PART == "check_lid") translate([0, 0, H_in]) lid();
