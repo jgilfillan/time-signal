@@ -10,7 +10,8 @@ wall.
 
 - Outside size: 194.4 x 66.4 x 36 mm (base 34 mm + lid 2 mm)
 - Parts: `base.stl`, `lid.stl` (the lid is already flipped for printing)
-- Source: `pi_time_tx_enclosure.scad` (OpenSCAD; every dimension is a named variable at the top)
+- Source: `pi_time_tx_enclosure.scad` (OpenSCAD; every dimension is a named variable at the top).
+  Set `PART` to `stack_exploded` or `stack_assembled` for the close-ups of the Pi and pHAT.
 
 ## Printing
 - Needs a bed at least 200 mm long in one direction (Ender 3, Prusa, Bambu P1/X1/A1 are fine;
@@ -48,16 +49,11 @@ Keep metal screws and standoffs to the Pi end of the box; nothing metal sits nea
 
 ### Fitting the pHAT to the Pi
 
-```
-        M2.5 screw ─┐               ┌─ M2.5 screw
-   ═════════════════╪═══ pHAT ══════╪═════   ← rests on the standoff tops
-                    ║  ▓▓▓▓▓▓▓▓▓▓   ║          J1 socket (8.5 mm) on its underside
-         standoff → ║  ┃┃┃┃┃┃┃┃┃┃   ║  11 mm   Pi header pins go up into the socket
-         (11 mm)    ║  ▀▀▀▀▀▀▀▀▀▀   ║          Pi header plastic (2.5 mm)
-   ═════════════════╬═══ Pi Zero ═══╬═════
-                   ┌╨┐             ┌╨┐       standoff's male thread goes through the Pi
-   ────────────────┘ └─── base ────┘ └───    into the printed post
-```
+![Exploded view of the Pi, standoffs and pHAT](render_stack_exploded.png)
+
+![The pHAT fitted on the Pi](render_stack_assembled.png)
+
+*Fitted: the pHAT rests on the standoffs with the socket fully on the pins.*
 
 The standoffs are 11 mm because the Pi's header plastic (2.5 mm) plus the
 pHAT's socket (8.5 mm) is 11 mm. At that height the socket is fully pushed

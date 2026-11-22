@@ -6,6 +6,7 @@
 //   "lid"      printable lid (already flipped for printing)
 //   "assembly" coloured preview with the Pi, pHAT and antenna in place
 //   "exploded" coloured exploded view
+//   "stack_exploded" / "stack_assembled"  close-up of fitting the pHAT to the Pi
 //   "check_hit_base" / "check_hit_lid"  collision tests (should render empty)
 PART = "assembly";
 
@@ -180,6 +181,42 @@ module contents(dz = 0) {
     translate([ant_x0, ant_yc, ant_zc - 1.3 + dz * 0.6]) antenna();
 }
 
+
+// ---- close-up of the Pi / standoff / pHAT stack (for the assembly guide) ----
+module header_pins() {
+    color("gold") for (i = [0:19], j = [0, 1])
+        translate([7.1 + 1.27 + i * 2.54 - 0.32, pi_W - 2.5 + (j - 0.5) * 2.54 - 0.32, pcb_t])
+            cube([0.64, 0.64, 2.5 + 6]);
+}
+module standoff() {               // M2.5 x 11 male-female hex standoff
+    color("gold") {
+        cylinder(d = 5, h = stack, $fn = 6);
+        translate([0, 0, -6]) cylinder(d = 2.4, h = 6, $fn = 16);
+    }
+}
+module m25_screw() {
+    color("#b0b0b0") {
+        cylinder(d = 4.5, h = 1.8);
+        translate([0, 0, -5]) cylinder(d = 2.4, h = 5, $fn = 16);
+    }
+}
+module base_corner() {            // just the floor and posts under the Pi
+    color("#d8d8d2") {
+        translate([-4, -4, -floor_t]) cube([pi_L + 8, pi_W + 8, floor_t]);
+        for (h = holes) translate([h[0], h[1], 0]) difference() {
+            cylinder(d = 6, h = standoff_h);
+            translate([0, 0, 1]) cylinder(d = 2.2, h = standoff_h);
+        }
+    }
+}
+module stack_view(e = 0) {        // e = gap added between parts
+    base_corner();
+    translate([0, 0, pi_z + e]) { pi_zero(); header_pins(); }
+    for (h = holes) translate([h[0], h[1], pi_z + pcb_t + 2 * e]) standoff();
+    translate([0, 0, hat_z + 3 * e]) phat();
+    for (h = holes) translate([h[0], h[1], hat_z + pcb_t + 4 * e]) m25_screw();
+}
+
 if (PART == "base") base();
 else if (PART == "lid") translate([0, W_in, lid_t]) rotate([180, 0, 0]) lid();
 else if (PART == "check_contents") contents();
@@ -191,6 +228,8 @@ else if (PART == "assembly") {
     contents();
     color("#e9e9e4", 0.35) translate([0, 0, H_in]) lid();
 }
+else if (PART == "stack_exploded") stack_view(14);
+else if (PART == "stack_assembled") stack_view(0);
 else if (PART == "exploded") {
     color("#d8d8d2") base();
     contents(18);
