@@ -1,6 +1,8 @@
 # pHAT PCB (v1.2)
 
-A 65 × 30 mm board that plugs straight onto a Raspberry Pi Zero W / Zero 2 W.
+A 65 × 30 mm board that plugs straight onto a Raspberry Pi Zero WH / Zero 2 WH
+(a Zero W or Zero 2 W with the 40-pin header fitted; a plain Zero W / Zero 2 W
+needs a 2 × 20 male header soldered on first).
 JLCPCB makes and fully assembles it, including both connectors. You only
 screw the antenna leads into the terminal.
 
@@ -65,8 +67,9 @@ extended-part fee.
 - Wind the [antenna](../antenna/README.md) and screw its two leads into J2
   (either way round).
 - Mount on the Pi with M2.5 × 11 mm male-female standoffs (8.5 mm socket plus
-  the Pi header's plastic). The [enclosure](../enclosure/README.md) is
-  designed for this stack.
+  the Pi header's 2.5 mm plastic). Step-by-step instructions are in the
+  [enclosure guide](../enclosure/README.md#fitting-the-phat-to-the-pi), which
+  is designed for this stack.
 - If a board needs trimming, add a 1206 C0G capacitor at C3/C4 or a leaded
   one at C5, and tune as in the [antenna guide](../antenna/README.md#tuning).
 

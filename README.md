@@ -38,7 +38,8 @@ a shelf nearby. See [hardware](hardware/README.md) for the details.
 **Supported Pis:** upstream tested the transmitter on the Pi Zero W, Pi 3
 Model B and Pi 4 Model B. The Pi Zero 2 W uses the same chip family as the
 Pi 3 and is expected to work. The pHAT and enclosure fit the Zero W and
-Zero 2 W.
+Zero 2 W; get the **WH** versions (header pre-soldered) or solder a 40-pin
+header on yourself.
 
 ## Software
 

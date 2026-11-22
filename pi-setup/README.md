@@ -1,6 +1,6 @@
 # Pi set-up: making give-away transmitters
 
-This folder turns a Raspberry Pi Zero W / Zero 2 W with the time-signal pHAT
+This folder turns a Raspberry Pi Zero WH / Zero 2 WH (header fitted) with the time-signal pHAT
 into a plug-and-play gadget. The person you give it to only has to:
 
 1. plug it in, and

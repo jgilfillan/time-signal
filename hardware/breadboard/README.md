@@ -21,6 +21,7 @@ breadboard with row **a** at the bottom and row **j** at the top.
 | C2 | 1.5 nF, 100 V polyester (greencap) | |
 | Trimmer | Jaycar RV5728 tuning capacitor | Fine tuning, 3 pins (see below) |
 | Antenna | 3-rod ferrite coil | See [antenna guide](../antenna/README.md) |
+| Raspberry Pi | Zero WH, Zero 2 WH or Pi 3 | Needs the 40-pin header fitted (the "H" versions of the Zero have it). Female-to-male jumpers go from GPIO4, 5 V and GND to the breadboard. |
 | Jumper wires, breadboard | | |
 
 Avoid ceramic disc capacitors (lossy and drift with temperature) and

@@ -24,6 +24,7 @@ wall.
 ## Hardware
 | Qty | Part | Used for |
 |-----|------|----------|
+| 1 | Raspberry Pi Zero **WH** or Zero 2 **WH** (the "H" means the 40-pin header is already soldered on) | the computer; a plain Zero W / Zero 2 W needs a 2 x 20 male header soldered on first |
 | 4 | M2.5 x 11 mm male-female hex standoff (6 mm thread, brass or nylon) | between the Pi and the pHAT |
 | 4 | M2.5 x 5 or 6 mm screw | pHAT into the standoffs |
 | 4 | M3 x 10 mm countersunk self-tapping screw | lid |
@@ -37,13 +38,59 @@ Keep metal screws and standoffs to the Pi end of the box; nothing metal sits nea
 2. Screw the 4 male-female standoffs down through the Pi's mounting holes into the printed
    posts in the base. The male thread self-taps into the 2.2 mm holes; don't overtighten.
    The Pi's ports line up with the openings in the front wall.
-3. Plug the pHAT onto the Pi's header and fix it to the standoffs with the M2.5 screws.
+3. Plug the pHAT onto the Pi and fix it to the standoffs (details below).
 4. Lay the antenna bundle in the four saddles along the back wall, with the winding in the
    gap in the middle. Thread a cable tie through the tunnel in two of the saddles and around
    the bundle.
 5. Run the two coil leads forward to the screw terminal (J2) and tighten them in, either way
    round. Keep the leads tidy and away from the Pi.
 6. Fit the lid and screw it down. Power comes in through the Pi's micro-USB PWR port.
+
+### Fitting the pHAT to the Pi
+
+```
+        M2.5 screw ─┐               ┌─ M2.5 screw
+   ═════════════════╪═══ pHAT ══════╪═════   ← rests on the standoff tops
+                    ║  ▓▓▓▓▓▓▓▓▓▓   ║          J1 socket (8.5 mm) on its underside
+         standoff → ║  ┃┃┃┃┃┃┃┃┃┃   ║  11 mm   Pi header pins go up into the socket
+         (11 mm)    ║  ▀▀▀▀▀▀▀▀▀▀   ║          Pi header plastic (2.5 mm)
+   ═════════════════╬═══ Pi Zero ═══╬═════
+                   ┌╨┐             ┌╨┐       standoff's male thread goes through the Pi
+   ────────────────┘ └─── base ────┘ └───    into the printed post
+```
+
+The standoffs are 11 mm because the Pi's header plastic (2.5 mm) plus the
+pHAT's socket (8.5 mm) is 11 mm. At that height the socket is fully pushed
+onto the pins and the pHAT also sits on the standoffs, so the boards are
+clamped together without straining the connector.
+
+**Before you start:** the Pi needs a 40-pin male header on its top side. A
+Pi Zero WH or Zero 2 WH has one fitted at the factory; a plain Zero W or
+Zero 2 W doesn't. Unplug the power.
+
+1. With the Pi already held in the base by the four standoffs (threaded holes
+   facing up), hold the pHAT socket-side down with its four holes over the
+   standoffs. It only fits one way: turned round, the socket would be at the
+   wrong edge and miss the header. If all four holes line up, the socket lines
+   up with the pins too.
+2. Press straight down, evenly over both ends of the socket, until the socket
+   bottoms out on the header plastic and the board sits on the standoffs.
+   Don't push on the screw terminal.
+3. Put an M2.5 x 5 or 6 mm screw into each standoff. Tighten them just snug;
+   overtightening bends the board.
+
+**If it doesn't sit right**
+- *A gap between the pHAT and the standoffs:* the socket isn't fully on. Press
+  again over the socket. If it still won't close, the Pi's header is probably
+  a taller type; use 12 mm standoffs or put a washer on each.
+- *The pHAT bows when you screw it down:* check the socket is fully home and
+  don't tighten further.
+- *Taking it off:* remove the screws and lift straight up, rocking gently end
+  to end. Prising up one end bends the pins.
+
+**Testing on the bench first:** to tune or test before boxing it, build the
+same stack outside the case with M2.5 nuts on the standoffs' male threads
+under the Pi. Take the nuts off later and screw the standoffs into the base.
 
 ## Placement for best range
 The rods radiate as a magnetic dipole along their length. Range is best with the clock's own
