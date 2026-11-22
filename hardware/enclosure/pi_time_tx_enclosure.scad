@@ -18,7 +18,7 @@ wall   = 2.2;        // side walls
 floor_t = 2.0;       // base floor
 lid_t  = 2.0;        // lid plate
 L_in   = 190;        // inside length  (rods are 180 mm)
-W_in   = 62;         // inside depth
+W_in   = 66;         // inside depth (leaves a 3 mm gap behind the saddles for the cable ties)
 H_in   = 32;         // inside height (floor top to lid underside)
 L_out  = L_in + 2 * wall;
 W_out  = W_in + 2 * wall;
@@ -42,7 +42,7 @@ sd_yc = 16.9;                        // microSD centre from the port edge
 
 // ---------------- antenna ----------------
 rod_d = 9; rod_L = 180;
-ant_yc = W_in - 12;                  // bundle centre line (along the back wall)
+ant_yc = W_in - 16;                  // bundle centre line (along the back wall)
 ant_zc = 16;                         // bundle centre height
 ant_x0 = (L_in - rod_L) / 2;
 saddle_x = [22, 62, 128, 168];       // keep clear of the winding at the centre

@@ -89,8 +89,8 @@ Goal: recipient plugs in, picks Wi-Fi on a phone, done.
 - **Antenna:** 3 × 9 × 180 mm ferrite rods (Jaycar LF1012) in a triangle,
   ~55 turns 0.25 mm enamelled wire, tight single layer at the centre.
   ~610 µH needed for 11.5 nF at 60 kHz.
-- **Enclosure:** OpenSCAD, 194 × 66 × 36 mm, Pi stack front-left on M2.5 ×
-  11 mm male-female standoffs, antenna in four saddles along the back wall,
+- **Enclosure:** OpenSCAD, 194 × 70 × 36 mm, Pi stack front-left on M2.5 ×
+  11 mm male-female standoffs, antenna in four saddles along the back wall (cable-tie tunnels under the middle two, open both ends; 3 mm gap to the back wall),
   M3 lid screws. Checked for collisions with modelled parts; not yet printed.
 
 ## Open items

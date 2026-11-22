@@ -8,7 +8,7 @@ wall.
 |---|---|
 | ![Exploded view](render_exploded.png) | ![Assembled view](render_assembly.png) |
 
-- Outside size: 194.4 x 66.4 x 36 mm (base 34 mm + lid 2 mm)
+- Outside size: 194.4 x 70.4 x 36 mm (base 34 mm + lid 2 mm)
 - Parts: `base.stl`, `lid.stl` (the lid is already flipped for printing)
 - Source: `pi_time_tx_enclosure.scad` (OpenSCAD; every dimension is a named variable at the top).
   Set `PART` to `full_exploded` for the numbered exploded view, or `stack_exploded` /
@@ -30,7 +30,7 @@ wall.
 | 4 | M2.5 x 11 mm male-female hex standoff (6 mm thread, brass or nylon) | between the Pi and the pHAT |
 | 4 | M2.5 x 5 or 6 mm screw | pHAT into the standoffs |
 | 4 | M3 x 10 mm countersunk self-tapping screw | lid |
-| 2-3 | small cable ties, 2.5 mm wide | hold the antenna in its saddles |
+| 2 | nylon cable ties, 2.5 mm wide, at least 150 mm long | hold the antenna in its saddles |
 | 4 | stick-on rubber feet (optional) | |
 
 Keep metal screws and standoffs to the Pi end of the box; nothing metal sits near the ferrite.
@@ -44,12 +44,23 @@ Keep metal screws and standoffs to the Pi end of the box; nothing metal sits nea
    posts in the base. The male thread self-taps into the 2.2 mm holes; don't overtighten.
    The Pi's ports line up with the openings in the front wall.
 3. Plug the pHAT onto the Pi and fix it to the standoffs (details below).
-4. Lay the antenna bundle in the four saddles along the back wall, with the winding in the
-   gap in the middle. Thread a cable tie through the tunnel in two of the saddles and around
-   the bundle.
+4. Thread a cable tie through the tunnel under each of the two middle saddles, in at the
+   front face and out through the gap behind it, and leave both ends standing up. Lay the
+   antenna bundle in the four saddles, with the winding in the gap between the middle two.
+   Bring each tie over the top of the bundle, buckle it on top, pull it snug (ferrite is
+   brittle, so don't crank it) and trim the tail. See the cross-section below.
 5. Run the two coil leads forward to the screw terminal (J2) and tighten them in, either way
    round. Keep the leads tidy and away from the Pi.
 6. Fit the lid and screw it down. Power comes in through the Pi's micro-USB PWR port.
+
+### Cable ties
+
+![Cross-section through a saddle showing the cable tie path](render_cable_tie_section.png)
+
+Each of the middle two saddles has a 5 × 2.6 mm tunnel under its cradle. It's open at
+both ends: at the front face of the saddle, and into a 3 mm gap between the back of the
+saddle and the back wall. The tie loops through the tunnel and over the bundle, so it
+holds the rods down without anything metal near the ferrite.
 
 ### Fitting the pHAT to the Pi
 
@@ -101,6 +112,8 @@ the long side. A clock turned 90 degrees to the box may not pick up the signal a
 - Both STL files are single, watertight solids.
 - The Pi, pHAT, standoffs, screw terminal and antenna were modelled in place and checked for
   collisions with the base and lid: none.
+- A 2.4 x 1.0 mm cable tie was modelled along its path (through the tunnel, up both faces of
+  the saddle and over the bundle) and checked against the base, lid and contents: no collisions.
 - Port positions use the Pi Zero's published mechanical drawing (mini-HDMI at 12.4 mm,
   USB at 41.4 mm, PWR at 54.0 mm from the left edge). The openings are oversized so moulded
   cable plugs fit. Print a test strip of the front wall first if your cables are unusually bulky.
