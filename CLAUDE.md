@@ -36,6 +36,13 @@ This file records the decisions made so far so a new session can carry on.
   WWVB → America/New_York for DST bits). The Pi's own zone is irrelevant.
 - Config path and defaults come from env: `TIMESIGNAL_CONFIG`,
   `TIMESIGNAL_DEFAULT_SERVICE`, `TIMESIGNAL_DEFAULT_AUTOSTART`.
+- **Config persistence:** `save_config` fsyncs the file and folder (units get
+  unplugged without shutdown). `config_persistent()` checks `/proc/mounts`
+  for the config folder's filesystem; overlay/tmpfs means it'd be lost at
+  reboot (e.g. `/data` didn't mount), which is logged and shown as a warning
+  row in the UI (`config_persistent` in `/api/status`). Save failures return
+  500 with a message. The appliance drop-in orders the service
+  `Wants=`/`After=data.mount`.
 - `/api/status` also returns `time_synced`, `waiting_for_sync`,
   `station_time`/`station_tz`, `hostname`, `addresses`, `port`.
 - Needs Python ≥ 3.9 (`zoneinfo`).

@@ -82,6 +82,13 @@ info "Wi-Fi country set to $COUNTRY"
 "$REPO_DIR/install.sh" --non-interactive
 mkdir -p /etc/systemd/system/time-signal-web.service.d
 cat > /etc/systemd/system/time-signal-web.service.d/appliance.conf <<EOF
+[Unit]
+# Read and save settings only once the data partition is mounted. Wants=
+# rather than Requires= so the web page still comes up (and warns that
+# settings won't be kept) if the partition is missing, e.g. on the master.
+Wants=data.mount
+After=data.mount
+
 [Service]
 Environment=TIMESIGNAL_CONFIG=/data/time-signal/config.json
 Environment=TIMESIGNAL_DEFAULT_SERVICE=$SERVICE

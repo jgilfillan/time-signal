@@ -128,6 +128,34 @@ class ServerTests(unittest.TestCase):
         self.assertTrue(s['time_synced'])
         self.assertIn('hostname', s)
 
+    def fake_mounts(self, *lines):
+        path = os.path.join(self.tmp.name, 'mounts')
+        with open(path, 'w') as fh:
+            fh.write(''.join(l + '\n' for l in lines))
+        self.server.MOUNTS_FILE = path
+
+    def test_config_on_data_partition_is_persistent(self):
+        data = os.path.join(self.tmp.name, 'data')
+        self.fake_mounts('overlayroot / overlay rw 0 0',
+                         f'/dev/mmcblk0p3 {data} ext4 rw,noatime 0 0')
+        self.assertTrue(self.server.config_persistent())
+        self.assertTrue(self.client.get('/api/status').get_json()['config_persistent'])
+
+    def test_config_on_overlay_flagged_not_persistent(self):
+        # data partition didn't mount: /data is just a folder on the RAM overlay
+        self.fake_mounts('overlayroot / overlay rw 0 0',
+                         '/dev/mmcblk0p1 /boot/firmware vfat rw 0 0')
+        self.assertFalse(self.client.get('/api/status').get_json()['config_persistent'])
+        r = self.client.post('/api/config', json={'autostart': False})
+        self.assertEqual(r.status_code, 200)   # still saved for this session
+
+    def test_save_failure_returns_error(self):
+        # e.g. the data partition went read-only or vanished
+        self.server.CONFIG_PATH = os.path.join(self.tmp.name, 'gone', 'config.json')
+        r = self.client.post('/api/config', json={'autostart': False})
+        self.assertEqual(r.status_code, 500)
+        self.assertIn('save', r.get_json()['error'])
+
     def test_page_renders(self):
         r = self.client.get('/')
         self.assertEqual(r.status_code, 200)

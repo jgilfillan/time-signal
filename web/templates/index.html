@@ -139,6 +139,7 @@
       font-size: 0.82rem;
     }
     .facts div { display: flex; justify-content: space-between; gap: 1rem; }
+    .facts div[hidden] { display: none; }
     .facts dt  { color: var(--muted); }
     .facts dd  { text-align: right; font-variant-numeric: tabular-nums; }
     .facts .ok   { color: var(--green); }
@@ -335,6 +336,7 @@
       <div><dt>Station time</dt><dd id="stationTime">–</dd></div>
       <div><dt>Clock</dt><dd id="clockState">–</dd></div>
       <div><dt>This device</dt><dd id="deviceAddr">–</dd></div>
+      <div id="settingsRow" hidden><dt>Settings</dt><dd id="settingsState" class="warn">Won't be kept after a restart</dd></div>
     </dl>
   </div>
 
@@ -439,6 +441,9 @@
     } else {
       clock.textContent = 'Unknown'; clock.className = '';
     }
+    // Warn if settings are going somewhere that is cleared at reboot
+    document.getElementById('settingsRow').hidden = data.config_persistent !== false;
+
     const port = data.port && data.port !== 80 ? ':' + data.port : '';
     const ips = (data.addresses || []).join(', ');
     document.getElementById('deviceAddr').textContent =
@@ -525,7 +530,8 @@
       });
       if (!res.ok) {
         el.checked = !enable; // revert
-        showError('Failed to update autostart setting.');
+        const body = await res.json().catch(() => ({}));
+        showError(body.error || 'Failed to update autostart setting.');
       }
     } catch (err) {
       el.checked = !enable;

@@ -99,6 +99,45 @@ def _resolve_config_path() -> str:
 
 CONFIG_PATH = _resolve_config_path()
 
+# Filesystems whose contents vanish at reboot. With the read-only overlay
+# enabled, "/" is an overlay backed by RAM, so a config written anywhere on
+# it (including an empty /data folder when the data partition didn't mount)
+# would look saved but be lost at the next restart.
+VOLATILE_FS = {'overlay', 'tmpfs', 'ramfs'}
+MOUNTS_FILE = '/proc/mounts'
+
+
+def _mount_for(path: str) -> Tuple[Optional[str], Optional[str]]:
+    """Return (mount point, filesystem type) holding *path*, or (None, None)."""
+    path = os.path.realpath(path)
+    best: Tuple[Optional[str], Optional[str]] = (None, None)
+    try:
+        with open(MOUNTS_FILE) as fh:
+            for line in fh:
+                parts = line.split()
+                if len(parts) < 3:
+                    continue
+                mnt = parts[1].replace('\\040', ' ')
+                fstype = parts[2]
+                inside = path == mnt or path.startswith(mnt.rstrip('/') + '/')
+                if inside and (best[0] is None or len(mnt) >= len(best[0])):
+                    best = (mnt, fstype)
+    except OSError:
+        pass
+    return best
+
+
+def config_persistent() -> Optional[bool]:
+    """True if settings survive a reboot, False if not, None if unknown."""
+    _, fstype = _mount_for(os.path.dirname(CONFIG_PATH))
+    if fstype is None:
+        return None
+    return fstype not in VOLATILE_FS
+
+
+class ConfigSaveError(Exception):
+    pass
+
 # ---------------------------------------------------------------------------
 # Config helpers
 # ---------------------------------------------------------------------------
@@ -114,11 +153,30 @@ def load_config() -> Dict:
 
 
 def save_config(cfg: Dict) -> None:
-    """Persist config to disk atomically."""
+    """Persist config to disk atomically.
+
+    The file and its folder are fsync'd so a setting survives the plug being
+    pulled straight afterwards, which is how most people will turn it off.
+    """
     tmp = CONFIG_PATH + '.tmp'
-    with open(tmp, 'w') as fh:
-        json.dump(cfg, fh, indent=2)
-    os.replace(tmp, CONFIG_PATH)
+    try:
+        with open(tmp, 'w') as fh:
+            json.dump(cfg, fh, indent=2)
+            fh.flush()
+            os.fsync(fh.fileno())
+        os.replace(tmp, CONFIG_PATH)
+        dir_fd = os.open(os.path.dirname(CONFIG_PATH), os.O_RDONLY)
+        try:
+            os.fsync(dir_fd)
+        finally:
+            os.close(dir_fd)
+    except OSError as exc:
+        logging.error("Could not save settings to %s: %s", CONFIG_PATH, exc)
+        raise ConfigSaveError("Couldn't save the settings on this device.") from exc
+    if config_persistent() is False:
+        logging.warning("Settings saved to %s, which is not on persistent "
+                        "storage; they will be lost at the next restart.",
+                        CONFIG_PATH)
 
 # ---------------------------------------------------------------------------
 # Transmitter process management
@@ -300,6 +358,11 @@ logging.basicConfig(
 )
 
 
+@app.errorhandler(ConfigSaveError)
+def _config_save_failed(exc):
+    return jsonify({'error': str(exc)}), 500
+
+
 @app.route('/')
 def index():
     cfg = load_config()
@@ -331,6 +394,7 @@ def api_status():
         'hostname':     socket.gethostname(),
         'addresses':    device_addresses(),
         'port':         PORT,
+        'config_persistent': config_persistent(),
     })
 
 
@@ -417,6 +481,10 @@ def api_config_post():
 if __name__ == '__main__':
     cfg = load_config()
     logging.info("Config file: %s", CONFIG_PATH)
+    if config_persistent() is False:
+        logging.warning("%s is on a filesystem that is cleared at reboot "
+                        "(is the data partition mounted?). Settings changed "
+                        "in the web page will not be kept.", CONFIG_PATH)
     if cfg.get('autostart'):
         logging.info(
             "Autostart is enabled – starting %s transmitter …", cfg['service']
