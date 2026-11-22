@@ -12,6 +12,20 @@
 
 set -euo pipefail
 
+# Non-interactive mode (used by pi-setup/setup-appliance.sh):
+#   sudo ./install.sh --non-interactive
+# skips the optional static-IP questions.
+NON_INTERACTIVE=0
+for arg in "$@"; do
+  case "$arg" in
+    --non-interactive|-y) NON_INTERACTIVE=1 ;;
+    -h|--help)
+      echo "Usage: sudo ./install.sh [--non-interactive]"
+      exit 0 ;;
+    *) echo "Unknown option: $arg" >&2; exit 1 ;;
+  esac
+done
+
 # ── Colour helpers ──────────────────────────────────────────────────────────
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'
 BOLD='\033[1m'; RESET='\033[0m'
@@ -176,7 +190,8 @@ configure_static_ip() {
   elif [ -f "/etc/dhcpcd.conf" ]; then
     # ── dhcpcd path ───────────────────────────────────────────────────────
     local dhcpcd_conf="/etc/dhcpcd.conf"
-    local backup_file="$dhcpcd_conf.time-signal.bak.$(date +%Y%m%d%H%M%S)"
+    local backup_file
+    backup_file="$dhcpcd_conf.time-signal.bak.$(date +%Y%m%d%H%M%S)"
 
     cp "$dhcpcd_conf" "$backup_file"
     sed -i '/^# >>> time-signal static ip >>>$/,/^# <<< time-signal static ip <<</d' "$dhcpcd_conf"
@@ -247,7 +262,11 @@ echo "Installing Python dependencies …"
 info "Flask installed"
 
 # ── Optional. Configure static IP ────────────────────────────────────────────
-configure_static_ip
+if [ "$NON_INTERACTIVE" -eq 1 ] || [ ! -t 0 ]; then
+  info "Static IP setup skipped (non-interactive)"
+else
+  configure_static_ip
+fi
 
 # ── 5. Install systemd service ───────────────────────────────────────────────
 echo "Installing systemd service …"

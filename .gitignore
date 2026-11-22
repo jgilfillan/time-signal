@@ -1,0 +1,13 @@
+# Python
+__pycache__/
+*.pyc
+web/.venv/
+
+# Runtime config written by the web UI
+web/config.json
+
+# Build output
+/time-signal
+
+# Images built with pi-setup/build-image.sh
+*.img

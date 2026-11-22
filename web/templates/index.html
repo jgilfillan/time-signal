@@ -127,6 +127,23 @@
     }
     .running .badge  { background: var(--green-dim); color: var(--green); }
     .stopped .badge  { background: var(--red-dim);   color: var(--red); }
+    .waiting .dot    { background: #f59e0b; }
+    .waiting .badge  { background: #451a03; color: #f59e0b; }
+
+    .facts {
+      margin-top: 1rem;
+      padding-top: 0.9rem;
+      border-top: 1px solid var(--border);
+      display: grid;
+      gap: 0.4rem;
+      font-size: 0.82rem;
+    }
+    .facts div { display: flex; justify-content: space-between; gap: 1rem; }
+    .facts div[hidden] { display: none; }
+    .facts dt  { color: var(--muted); }
+    .facts dd  { text-align: right; font-variant-numeric: tabular-nums; }
+    .facts .ok   { color: var(--green); }
+    .facts .warn { color: #f59e0b; }
 
     /* ------------------------------------------------------------------ */
     /* Service selector                                                     */
@@ -315,6 +332,12 @@
       </div>
       <div class="badge" id="statusBadge">IDLE</div>
     </div>
+    <dl class="facts">
+      <div><dt>Station time</dt><dd id="stationTime">–</dd></div>
+      <div><dt>Clock</dt><dd id="clockState">–</dd></div>
+      <div><dt>This device</dt><dd id="deviceAddr">–</dd></div>
+      <div id="settingsRow" hidden><dt>Settings</dt><dd id="settingsState" class="warn">Won't be kept after a restart</dd></div>
+    </dl>
   </div>
 
   <!-- Service card -->
@@ -398,12 +421,33 @@
     const label  = document.getElementById('statusLabel');
     const sub    = document.getElementById('statusSub');
     const badge  = document.getElementById('statusBadge');
-    row.className = 'status-row ' + (isRunning ? 'running' : 'stopped');
-    label.textContent = isRunning ? 'Transmitting' : 'Stopped';
+    const waiting = !isRunning && data.waiting_for_sync;
+    row.className = 'status-row ' + (isRunning ? 'running' : waiting ? 'waiting' : 'stopped');
+    label.textContent = isRunning ? 'Transmitting' : waiting ? 'Waiting for time sync' : 'Stopped';
     sub.textContent   = isRunning
       ? data.service + ' — ' + (serviceFreq(data.service) || '')
+      : waiting ? 'Will start ' + data.service + ' once the clock is set'
       : 'No transmission';
-    badge.textContent = isRunning ? 'ON AIR' : 'IDLE';
+    badge.textContent = isRunning ? 'ON AIR' : waiting ? 'WAITING' : 'IDLE';
+
+    // Station time, clock sync state and how to reach this device
+    document.getElementById('stationTime').textContent =
+      data.station_time ? data.station_time + ' ' + (data.station_tz || '') : '–';
+    const clock = document.getElementById('clockState');
+    if (data.time_synced === true) {
+      clock.textContent = 'Synced to internet time'; clock.className = 'ok';
+    } else if (data.time_synced === false) {
+      clock.textContent = 'Not synced yet — check Wi-Fi'; clock.className = 'warn';
+    } else {
+      clock.textContent = 'Unknown'; clock.className = '';
+    }
+    // Warn if settings are going somewhere that is cleared at reboot
+    document.getElementById('settingsRow').hidden = data.config_persistent !== false;
+
+    const port = data.port && data.port !== 80 ? ':' + data.port : '';
+    const ips = (data.addresses || []).join(', ');
+    document.getElementById('deviceAddr').textContent =
+      data.hostname ? data.hostname + '.local' + port + (ips ? '  ·  ' + ips : '') : '–';
 
     // Service radios — keep the active service synced while transmitting,
     // but do not overwrite a stopped user's in-progress selection.
@@ -486,7 +530,8 @@
       });
       if (!res.ok) {
         el.checked = !enable; // revert
-        showError('Failed to update autostart setting.');
+        const body = await res.json().catch(() => ({}));
+        showError(body.error || 'Failed to update autostart setting.');
       }
     } catch (err) {
       el.checked = !enable;
