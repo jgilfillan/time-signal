@@ -7,6 +7,7 @@
 //   "assembly" coloured preview with the Pi, pHAT and antenna in place
 //   "exploded" coloured exploded view
 //   "stack_exploded" / "stack_assembled"  close-up of fitting the pHAT to the Pi
+//   "full_exploded"  every part, spread out in assembly order
 //   "check_hit_base" / "check_hit_lid"  collision tests (should render empty)
 PART = "assembly";
 
@@ -217,6 +218,37 @@ module stack_view(e = 0) {        // e = gap added between parts
     for (h = holes) translate([h[0], h[1], hat_z + pcb_t + 4 * e]) m25_screw();
 }
 
+// ---- exploded view of the whole unit, in assembly order ----
+module m3_screw() {               // countersunk M3 x 10 self-tapper
+    color("#b0b0b0") {
+        translate([0, 0, -1.7]) cylinder(d1 = 3, d2 = 6, h = 1.7);
+        translate([0, 0, -10]) cylinder(d = 3, h = 8.3, $fn = 16);
+    }
+}
+module cable_tie() {
+    color("#f4f4f0") rotate([0, 90, 0]) difference() {
+        cylinder(r = cradle_r + 1.2, h = 2.5, $fn = 64);
+        translate([0, 0, -1]) cylinder(r = cradle_r, h = 5, $fn = 64);
+    }
+}
+module full_exploded(e = 22) {
+    color("#d8d8d2") base();
+    // Pi, standoffs, pHAT and screws (front-left)
+    translate([pi_x0, pi_y0, 0]) {
+        translate([0, 0, pi_z + e]) { pi_zero(); header_pins(); }
+        for (h = holes) translate([h[0], h[1], pi_z + pcb_t + 2 * e]) standoff();
+        translate([0, 0, hat_z + 3 * e]) phat();
+        for (h = holes) translate([h[0], h[1], hat_z + pcb_t + 4 * e]) m25_screw();
+    }
+    // antenna and its two cable ties (back wall)
+    ant_dy = 1.8 * e;             // pulled back so it doesn't hide the Pi stack
+    translate([ant_x0, ant_yc + ant_dy, ant_zc - 1.3 + 1.4 * e]) antenna();
+    for (x = [saddle_x[1], saddle_x[2]]) translate([x - 1.25, ant_yc + ant_dy, ant_zc + 2.4 * e]) cable_tie();
+    // lid and its screws
+    color("#e9e9e4") translate([0, 0, H_in + 5.2 * e]) lid();
+    for (p = boss_pts) translate([p[0], p[1], H_in + lid_t + 6.2 * e]) m3_screw();
+}
+
 if (PART == "base") base();
 else if (PART == "lid") translate([0, W_in, lid_t]) rotate([180, 0, 0]) lid();
 else if (PART == "check_contents") contents();
@@ -229,6 +261,7 @@ else if (PART == "assembly") {
     color("#e9e9e4", 0.35) translate([0, 0, H_in]) lid();
 }
 else if (PART == "stack_exploded") stack_view(14);
+else if (PART == "full_exploded") full_exploded();
 else if (PART == "stack_assembled") stack_view(0);
 else if (PART == "exploded") {
     color("#d8d8d2") base();

@@ -11,7 +11,8 @@ wall.
 - Outside size: 194.4 x 66.4 x 36 mm (base 34 mm + lid 2 mm)
 - Parts: `base.stl`, `lid.stl` (the lid is already flipped for printing)
 - Source: `pi_time_tx_enclosure.scad` (OpenSCAD; every dimension is a named variable at the top).
-  Set `PART` to `stack_exploded` or `stack_assembled` for the close-ups of the Pi and pHAT.
+  Set `PART` to `full_exploded` for the numbered exploded view, or `stack_exploded` /
+  `stack_assembled` for the close-ups of the Pi and pHAT.
 
 ## Printing
 - Needs a bed at least 200 mm long in one direction (Ender 3, Prusa, Bambu P1/X1/A1 are fine;
@@ -35,6 +36,9 @@ wall.
 Keep metal screws and standoffs to the Pi end of the box; nothing metal sits near the ferrite.
 
 ## Assembly
+
+![Exploded view of the whole unit, numbered in assembly order](render_exploded_full.png)
+
 1. Fit a microSD card in the Pi first (it's reachable through the slot in the left end later).
 2. Screw the 4 male-female standoffs down through the Pi's mounting holes into the printed
    posts in the base. The male thread self-taps into the 2.2 mm holes; don't overtighten.
